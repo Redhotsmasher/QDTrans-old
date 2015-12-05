@@ -1,5 +1,12 @@
 #include "clang+llvm-3.7.0-x86_64-linux-gnu-ubuntu-14.04/include/clang-c/Index.h"
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+
+struct stackNode {
+    struct stackNode* prev;
+    char* kind;
+};
 
 CXFile* file;
 unsigned* curline;
@@ -12,6 +19,23 @@ unsigned* curcol2;
 unsigned* parcol2;
 
 char* kinds[701];
+
+struct stackNode* push(struct stackNode* currnode, char* kindstr) {
+    struct stackNode* newnode = malloc(sizeof(struct stackNode));
+    newnode->kind = kindstr;
+    newnode->prev = currnode;
+    return newnode;
+}
+
+struct stackNode* pop(struct stackNode* currnode) {
+    struct stackNode* prevnode = currnode->prev;
+    free(currnode->kind);
+    free(currnode);
+    return prevnode;
+}
+
+struct stackNode* stack;
+int depth;
 
 enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData client_data) {
     CXSourceRange curext = clang_getCursorExtent(cursor);
@@ -26,6 +50,18 @@ enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData cli
     clang_getFileLocation(parloc2, file, parline2, parcol2, NULL);
     char* str2 = kinds[clang_getCursorKind(cursor)];
     char* str1 = kinds[clang_getCursorKind(parent)];
+    if(strcmp(str1, stack->kind) != 0) {
+        if((stack->prev == NULL) || (strcmp(stack->kind, stack->prev->kind) != 0)) {
+	    stack = push(stack, str1);
+	    depth++;
+	} else {
+	    stack = pop(stack);
+	    depth--;
+	}
+    }
+    for(int i = depth; i > 1; i--) {
+        printf("  ");
+    }
     printf("%s(%d)@%u:%u-%u:%u->%s(%d)@%u:%u-%u:%u\n", str1, clang_getCursorKind(parent), *parline, *parcol, *parline2, *parcol2, str2, clang_getCursorKind(cursor), *curline, *curcol, *curline2, *curcol2);
     return CXChildVisit_Recurse;
 }
@@ -37,8 +73,9 @@ int main(int argc, char *argv[]) {
     if(argc == 2) {
         filename = argv[1];
     } else {
-        printUsage();
-        goto END;
+        filename = "Test1.c";
+        //printUsage();
+        //goto END;
     }
   
     kinds[1] = "CXCursor_UnexposedDecl";
@@ -233,7 +270,7 @@ int main(int argc, char *argv[]) {
     kinds[600] = "CXCursor_ModuleImportDecl";
 
     kinds[700] = "CXCursor_OverloadCandidate";
-
+    
     
     CXIndex cxi = clang_createIndex(1, 0);
     //const char* filename = "/home/redhotsmasher/QDTrans/src/Test1.c";
@@ -249,7 +286,14 @@ int main(int argc, char *argv[]) {
     parcol = malloc(sizeof(unsigned));
     curcol2 = malloc(sizeof(unsigned));
     parcol2 = malloc(sizeof(unsigned));
+    stack = malloc(sizeof(struct stackNode));
+    char* kindstring = malloc(1*sizeof(char));
+    stack->kind = kindstring;
+    stack->prev = NULL;
+    depth = 0;
     clang_visitChildren(cursor, visitor, NULL);
+    free(kindstring);
+    free(stack);
     free(curline);
     free(parline);
     free(curline2);
