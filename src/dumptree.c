@@ -20,6 +20,8 @@ unsigned* parcol2;
 
 char* kinds[701];
 
+FILE* filefile;
+
 struct stackNode* push(struct stackNode* currnode, char* kindstr) {
     struct stackNode* newnode = malloc(sizeof(struct stackNode));
     newnode->kind = kindstr;
@@ -50,6 +52,9 @@ enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData cli
     clang_getFileLocation(parloc2, file, parline2, parcol2, NULL);
     char* str2 = kinds[clang_getCursorKind(cursor)];
     char* str1 = kinds[clang_getCursorKind(parent)];
+    CXType type = clang_getCursorType(cursor);
+    CXString typestring = clang_getTypeSpelling (type);
+    char* tstr = clang_getCString (typestring);
     if(strcmp(str1, stack->kind) != 0) {
         if((stack->prev == NULL) || (strcmp(stack->kind, stack->prev->kind) != 0)) {
 	    stack = push(stack, str1);
@@ -62,7 +67,8 @@ enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData cli
     for(int i = depth; i > 1; i--) {
         printf("  ");
     }
-    printf("%s(%d)@%u:%u-%u:%u->%s(%d)@%u:%u-%u:%u\n", str1, clang_getCursorKind(parent), *parline, *parcol, *parline2, *parcol2, str2, clang_getCursorKind(cursor), *curline, *curcol, *curline2, *curcol2);
+    printf("%s(%d)@%u:%u-%u:%u->%s(%d)=%s@%u:%u-%u:%u\n", str1, clang_getCursorKind(parent), *parline, *parcol, *parline2, *parcol2, str2, clang_getCursorKind(cursor), tstr, *curline, *curcol, *curline2, *curcol2);
+    clang_disposeString (typestring);
     return CXChildVisit_Recurse;
 }
 
@@ -77,6 +83,8 @@ int main(int argc, char *argv[]) {
         //printUsage();
         //goto END;
     }
+
+    filefile = fopen(filename, "r+");
   
     kinds[1] = "CXCursor_UnexposedDecl";
     kinds[2] = "CXCursor_StructDecl";
@@ -312,4 +320,8 @@ int printUsage() {
     printf("USAGE:\n");
     printf("\n");
     printf("\tdumptree [FILENAME]\n");
+}
+
+char* getStringFromFile(startline, endline, startcol, endcol) {
+    // WIP
 }
