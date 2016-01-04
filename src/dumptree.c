@@ -3,9 +3,17 @@
 #include <stdio.h>
 #include <string.h>
 
-struct stackNode {
-    struct stackNode* prev;
-    char* kind;
+struct treeListNode;
+
+struct treeNode {
+    CXCursor cursor;
+    int childCount; // The number of children this node has.
+    struct treeListNode* children;
+};
+
+struct treeListNode {
+    struct treeNode* node;
+    struct treeListNode* next;
 };
 
 CXFile* file;
@@ -20,62 +28,101 @@ unsigned* parcol2;
 
 char* kinds[701];
 
+char* space = "  ";
+
 FILE* filefile;
 
-struct stackNode* push(struct stackNode* currnode, char* kindstr) {
-    struct stackNode* newnode = malloc(sizeof(struct stackNode));
-    newnode->kind = kindstr;
-    newnode->prev = currnode;
-    return newnode;
-}
+const char* filename;
 
-struct stackNode* pop(struct stackNode* currnode) {
-    struct stackNode* prevnode = currnode->prev;
-    free(currnode->kind);
-    free(currnode);
-    return prevnode;
-}
+int nodes = 0;
+int depth = -1;
 
-struct stackNode* stack;
-int depth;
+int maxdepth;
+
+struct treeNode* tree;
+struct treeNode* currentnode;
+
+void addChild(struct treeNode* node, struct treeNode* child) {
+    struct treeListNode* currnode = node->children;
+    //printf("Add %i to %i.\n", child, currnode);
+    if(currnode != NULL) {
+      //printf("currnode != NULL\n"); 
+      //printf("%u\n", currnode->next);
+        while(currnode->next != NULL) {
+	    currnode = currnode->next;
+	}
+	struct treeListNode* newnode = malloc(sizeof(struct treeListNode));
+	newnode->node = child;
+	newnode->next = NULL;
+	currnode->next = newnode;
+    } else {
+      //printf("currnode == NULL\n");
+        struct treeListNode* newnode = malloc(sizeof(struct treeListNode));
+	newnode->node = child;
+	newnode->next = NULL;
+	node->children = newnode;
+    }
+}
 
 enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData client_data) {
-    CXSourceRange curext = clang_getCursorExtent(cursor);
-    CXSourceRange parext = clang_getCursorExtent(parent);
-    CXSourceLocation curloc1 = clang_getRangeStart(curext);
-    CXSourceLocation parloc1 = clang_getRangeStart(parext);
-    CXSourceLocation curloc2 = clang_getRangeEnd(curext);
-    CXSourceLocation parloc2 = clang_getRangeEnd(parext);
-    clang_getFileLocation(curloc1, file, curline, curcol, NULL);
-    clang_getFileLocation(parloc1, file, parline, parcol, NULL);
-    clang_getFileLocation(curloc2, file, curline2, curcol2, NULL);
-    clang_getFileLocation(parloc2, file, parline2, parcol2, NULL);
-    char* str2 = kinds[clang_getCursorKind(cursor)];
-    char* str1 = kinds[clang_getCursorKind(parent)];
-    CXType type = clang_getCursorType(cursor);
-    CXString typestring = clang_getTypeSpelling (type);
-    char* tstr = clang_getCString (typestring);
-    if(strcmp(str1, stack->kind) != 0) {
-        if((stack->prev == NULL) || (strcmp(stack->kind, stack->prev->kind) != 0)) {
-	    stack = push(stack, str1);
-	    depth++;
-	} else {
-	    stack = pop(stack);
-	    depth--;
-	}
-    }
-    for(int i = depth; i > 1; i--) {
-        printf("  ");
-    }
-    printf("%s(%d)@%u:%u-%u:%u->%s(%d)=%s@%u:%u-%u:%u\n", str1, clang_getCursorKind(parent), *parline, *parcol, *parline2, *parcol2, str2, clang_getCursorKind(cursor), tstr, *curline, *curcol, *curline2, *curcol2);
-    clang_disposeString (typestring);
-    return CXChildVisit_Recurse;
+    nodes++;
+    struct treeNode* newnode = malloc(sizeof(struct treeNode));
+    newnode->cursor = cursor;
+    newnode->children = NULL;
+    //printf("vN: %i\n", currentnode);
+    currentnode->childCount++;
+    //if((currentnode != NULL) && ())
+    addChild(currentnode, newnode);
+    return CXChildVisit_Continue;
 }
+
+void visitRecursive(struct treeListNode* node) {
+    if(node != NULL) {
+        depth++;
+	if(depth > maxdepth) {
+	    maxdepth = depth;
+	}
+	struct treeListNode* nodeToVisit = node;
+        while(nodeToVisit != NULL) {
+	    nodeToVisit->node->childCount++;
+	    currentnode = nodeToVisit->node;
+	    //printf("vRN: %i\n", currentnode);
+	    clang_visitChildren(nodeToVisit->node->cursor, visit, NULL);
+	    visitRecursive(nodeToVisit->node->children);
+	    nodeToVisit = nodeToVisit->next;
+	}
+	depth--;
+    }
+}
+
+void printTree(struct treeNode* node) {
+    depth++;
+    for(int i = depth; i > 0; i--) {
+        printf("%s", space);
+    }
+    CXType type = clang_getCursorType(node->cursor);
+    CXString typestring = clang_getTypeSpelling (type);
+    enum CXCursorKind cursorkind = clang_getCursorKind(node->cursor);
+    char* str1 = kinds[cursorkind];
+    char* str2 = clang_getCString(typestring);
+    printf("%s([%i]):%s", str1, cursorkind, str2);
+    if(node->children != NULL) {
+        printf("->\n");
+        struct treeListNode* childlist = node->children;
+	while(childlist != NULL) {
+            printTree(childlist->node);
+	    childlist = childlist->next;
+	}
+    } else {
+        printf("\n");
+    }
+    depth--;
+}
+
 
 enum CXChildVisitResult (*visitor)(CXCursor, CXCursor, CXClientData) = &visit;
 
 int main(int argc, char *argv[]) {
-    const char* filename;
     if(argc == 2) {
         filename = argv[1];
     } else {
@@ -286,32 +333,15 @@ int main(int argc, char *argv[]) {
     CXTranslationUnit cxtup = clang_parseTranslationUnit (cxi, filename, NULL, 0, NULL, 0, 0);
     file = clang_getFile (cxtup, filename);
     CXCursor cursor = clang_getTranslationUnitCursor(cxtup);
-    curline = malloc(sizeof(unsigned));
-    parline = malloc(sizeof(unsigned));
-    curline2 = malloc(sizeof(unsigned));
-    parline2 = malloc(sizeof(unsigned));
-    curcol = malloc(sizeof(unsigned));
-    parcol = malloc(sizeof(unsigned));
-    curcol2 = malloc(sizeof(unsigned));
-    parcol2 = malloc(sizeof(unsigned));
-    stack = malloc(sizeof(struct stackNode));
-    char* kindstring = malloc(1*sizeof(char));
-    stack->kind = kindstring;
-    stack->prev = NULL;
-    depth = 0;
+    tree = malloc(sizeof(struct treeNode));
+    tree->cursor = cursor;
+    currentnode = tree;
     clang_visitChildren(cursor, visitor, NULL);
-    free(kindstring);
-    free(stack);
-    free(curline);
-    free(parline);
-    free(curline2);
-    free(parline2);
-    free(curcol);
-    free(parcol);
-    free(curcol2);
-    free(parcol2);
+    visitRecursive(tree->children);
+    printTree(tree);
     clang_disposeTranslationUnit(cxtup);
     clang_disposeIndex(cxi);
+    printf("Total nodes: %i\nMaximum depth: %i\n", nodes, maxdepth);
 END:
     return 0;
 }
