@@ -97,24 +97,47 @@ void visitRecursive(struct treeListNode* node) {
 
 void printTree(struct treeNode* node) {
     depth++;
-    for(int i = depth; i > 0; i--) {
-        printf("%s", space);
-    }
     CXType type = clang_getCursorType(node->cursor);
-    CXString typestring = clang_getTypeSpelling (type);
+    CXString typestring = clang_getTypeSpelling(type);
+    CXString cdisplaystring = clang_getCursorDisplayName(node->cursor);
+    CXString cspellstring = clang_getCursorSpelling(node->cursor);
+    unsigned* curlines = malloc(sizeof(unsigned));
+    unsigned* curlinee = malloc(sizeof(unsigned));
+    unsigned* curcols = malloc(sizeof(unsigned));
+    unsigned* curcole = malloc(sizeof(unsigned));
+    CXSourceRange range = clang_getCursorExtent(node->cursor);
+    CXSourceLocation rstart = clang_getRangeStart(range);
+    CXSourceLocation rend = clang_getRangeEnd(range);
+    clang_getFileLocation (rstart, NULL, curlines, curcols, NULL);
+    clang_getFileLocation (rend, NULL, curlinee, curcole, NULL);
     enum CXCursorKind cursorkind = clang_getCursorKind(node->cursor);
     char* str1 = kinds[cursorkind];
     char* str2 = clang_getCString(typestring);
-    printf("%s([%i]):%s", str1, cursorkind, str2);
+    char* str3 = clang_getCString(cdisplaystring);
+    char* str4 = clang_getCString(cspellstring);
+    if(clang_Location_isFromMainFile(rstart) != 0) {
+	for(int i = depth; i > 0; i--) {
+	    printf("%s", space);
+	}
+        printf("%s([%i]):%s \"%s\"; %s (L%u:C%u-L%u:C%u)", str1, cursorkind, str2, str3, str4, *curlines, *curcols, *curlinee, *curcole);
+    }
+    free(curlines);
+    free(curlinee);
+    free(curcols);
+    free(curcole);
     if(node->children != NULL) {
-        printf("->\n");
+        if(clang_Location_isFromMainFile(rstart) != 0) {
+	    printf("->\n");
+	}
         struct treeListNode* childlist = node->children;
 	while(childlist != NULL) {
             printTree(childlist->node);
 	    childlist = childlist->next;
 	}
     } else {
-        printf("\n");
+        if(clang_Location_isFromMainFile(rstart) != 0) {
+	    printf("\n");
+	}
     }
     depth--;
 }
@@ -123,14 +146,17 @@ void printTree(struct treeNode* node) {
 enum CXChildVisitResult (*visitor)(CXCursor, CXCursor, CXClientData) = &visit;
 
 int main(int argc, char *argv[]) {
+  
     if(argc == 2) {
         filename = argv[1];
     } else {
-        filename = "Test1.c";
-        //printUsage();
-        //goto END;
+      //filename = "Test1.c";
+        printUsage();
+        goto END;
     }
+  
 
+  //filename = "Test1t.c";
     filefile = fopen(filename, "r+");
   
     kinds[1] = "CXCursor_UnexposedDecl";
@@ -328,9 +354,17 @@ int main(int argc, char *argv[]) {
     
     
     CXIndex cxi = clang_createIndex(1, 0);
+    unsigned flags = (CXTranslationUnit_DetailedPreprocessingRecord | CXTranslationUnit_Incomplete);
     //const char* filename = "/home/redhotsmasher/QDTrans/src/Test1.c";
     //CXTranslationUnit cxtu = clang_createTranslationUnitFromSourceFile (cxi, filename, 0, NULL, 0, NULL);
-    CXTranslationUnit cxtup = clang_parseTranslationUnit (cxi, filename, NULL, 0, NULL, 0, 0);
+    printf("%s\n%s\n", argv[0], argv[1]);
+    char** argp;
+    argp = (char**)malloc(sizeof(char*)*2);
+    argp[0] = argv[0];
+    argp[1] = argv[1];
+    printf("%s\n%s\n", argp[0], argp[1]);
+    CXTranslationUnit cxtup = clang_createTranslationUnit(cxi, filename);
+    enum CXErrorCode error = clang_parseTranslationUnit2(cxi, filename, argp, 1, NULL, 0, flags, &cxtup);
     file = clang_getFile (cxtup, filename);
     CXCursor cursor = clang_getTranslationUnitCursor(cxtup);
     tree = malloc(sizeof(struct treeNode));
@@ -341,7 +375,7 @@ int main(int argc, char *argv[]) {
     printTree(tree);
     clang_disposeTranslationUnit(cxtup);
     clang_disposeIndex(cxi);
-    printf("Total nodes: %i\nMaximum depth: %i\n", nodes, maxdepth);
+    printf("Error Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", error, nodes, maxdepth);
 END:
     return 0;
 }
