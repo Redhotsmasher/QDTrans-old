@@ -95,7 +95,7 @@ void visitRecursive(struct treeListNode* node) {
     }
 }
 
-void printTree(struct treeNode* node) {
+void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
     depth++;
     CXType type = clang_getCursorType(node->cursor);
     CXString typestring = clang_getTypeSpelling(type);
@@ -119,7 +119,17 @@ void printTree(struct treeNode* node) {
 	for(int i = depth; i > 0; i--) {
 	    printf("%s", space);
 	}
-        printf("%s([%i]):%s \"%s\"; %s (L%u:C%u-L%u:C%u)", str1, cursorkind, str2, str3, str4, *curlines, *curcols, *curlinee, *curcole);
+        printf("%s([%i]):%s \"%s\"; %s (L%u:C%u-L%u:C%u), containing ", str1, cursorkind, str2, str3, str4, *curlines, *curcols, *curlinee, *curcole);
+	CXToken* tokens;
+	unsigned int numTokens;
+	clang_tokenize(cxtup, range, &tokens, &numTokens);
+	printf("%u tokens (", numTokens);
+	for(int i = 0; i<numTokens; i++) {
+	    CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
+	    printf("%s", clang_getCString(tokenstring));
+	}
+	clang_disposeTokens(cxtup, tokens, numTokens);
+	printf(")");
     }
     free(curlines);
     free(curlinee);
@@ -131,7 +141,7 @@ void printTree(struct treeNode* node) {
 	}
         struct treeListNode* childlist = node->children;
 	while(childlist != NULL) {
-            printTree(childlist->node);
+	  printTree(childlist->node, cxtup);
 	    childlist = childlist->next;
 	}
     } else {
@@ -150,9 +160,9 @@ int main(int argc, char *argv[]) {
     if(argc == 2) {
         filename = argv[1];
     } else {
-      //filename = "Test1.c";
-        printUsage();
-        goto END;
+        filename = "Test1.c";
+      //printUsage();
+      //goto END;
     }
   
 
@@ -372,7 +382,7 @@ int main(int argc, char *argv[]) {
     currentnode = tree;
     clang_visitChildren(cursor, visitor, NULL);
     visitRecursive(tree->children);
-    printTree(tree);
+    printTree(tree, cxtup);
     clang_disposeTranslationUnit(cxtup);
     clang_disposeIndex(cxi);
     printf("Error Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", error, nodes, maxdepth);
@@ -384,8 +394,4 @@ int printUsage() {
     printf("USAGE:\n");
     printf("\n");
     printf("\tdumptree [FILENAME]\n");
-}
-
-char* getStringFromFile(startline, endline, startcol, endcol) {
-    // WIP
 }
