@@ -70,9 +70,9 @@ int main(int argc, char *argv[]) {
     if(argc == 2) {
         filename = argv[1];
     } else {
-        filename = "Test1.c";
-      //printUsage();
-      //goto END;
+      //filename = "Test1.c";
+        printUsage();
+        goto END;
     }
   
 
@@ -277,14 +277,8 @@ int main(int argc, char *argv[]) {
     unsigned flags = (CXTranslationUnit_DetailedPreprocessingRecord | CXTranslationUnit_Incomplete);
     //const char* filename = "/home/redhotsmasher/QDTrans/src/Test1.c";
     //CXTranslationUnit cxtu = clang_createTranslationUnitFromSourceFile (cxi, filename, 0, NULL, 0, NULL);
-    printf("%s\n%s\n", argv[0], argv[1]);
-    char** argp;
-    argp = (char**)malloc(sizeof(char*)*2);
-    argp[0] = argv[0];
-    argp[1] = argv[1];
-    printf("%s\n%s\n", argp[0], argp[1]);
     CXTranslationUnit cxtup = clang_createTranslationUnit(cxi, filename);
-    enum CXErrorCode error = clang_parseTranslationUnit2(cxi, filename, argp, 1, NULL, 0, flags, &cxtup);
+    enum CXErrorCode error = clang_parseTranslationUnit2(cxi, filename, NULL, 0, NULL, 0, flags, &cxtup);
     file = clang_getFile (cxtup, filename);
     CXCursor cursor = clang_getTranslationUnitCursor(cxtup);
     tree = malloc(sizeof(struct treeNode));

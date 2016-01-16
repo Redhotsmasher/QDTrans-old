@@ -13,12 +13,10 @@ common:
 	$(CC) -c src/common.c $(CFLAGS) -o bin/common.o
 
 debug_dumptree: debug_common
-	$(CC) src/dumptree.c $(CFLAGS) $(DFLAGS) -o dumptree
+	$(CC) src/dumptree.c $(CFLAGS) $(DFLAGS) bin/common.o -o bin/dumptree
 
 debug_common: 
 	$(CC) -c src/common.c $(CFLAGS) $(DFLAGS) -o bin/common.o
 
 clean:
 	rm -f bin/*
-
-
