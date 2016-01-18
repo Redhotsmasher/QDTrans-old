@@ -8,58 +8,59 @@ char* kinds[701];
 
 struct treeNode* tree;
 
+int prevline = 0;
+int prevcol = 0;
+
 void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
     depth++;
-    CXType type = clang_getCursorType(node->cursor);
-    CXString typestring = clang_getTypeSpelling(type);
-    CXString cdisplaystring = clang_getCursorDisplayName(node->cursor);
-    CXString cspellstring = clang_getCursorSpelling(node->cursor);
-    unsigned* curlines = malloc(sizeof(unsigned));
-    unsigned* curlinee = malloc(sizeof(unsigned));
-    unsigned* curcols = malloc(sizeof(unsigned));
-    unsigned* curcole = malloc(sizeof(unsigned));
     CXSourceRange range = clang_getCursorExtent(node->cursor);
     CXSourceLocation rstart = clang_getRangeStart(range);
-    CXSourceLocation rend = clang_getRangeEnd(range);
-    clang_getFileLocation (rstart, NULL, curlines, curcols, NULL);
-    clang_getFileLocation (rend, NULL, curlinee, curcole, NULL);
-    enum CXCursorKind cursorkind = clang_getCursorKind(node->cursor);
-    char* str1 = kinds[cursorkind];
-    char* str2 = clang_getCString(typestring);
-    char* str3 = clang_getCString(cdisplaystring);
-    char* str4 = clang_getCString(cspellstring);
     if(clang_Location_isFromMainFile(rstart) != 0) {
-	for(int i = depth; i > 0; i--) {
-	    printf("%s", space);
-	}
-        printf("%s([%i]):%s \"%s\"; %s (L%u:C%u-L%u:C%u), containing ", str1, cursorkind, str2, str3, str4, *curlines, *curcols, *curlinee, *curcole);
-	CXToken* tokens;
-	unsigned int numTokens;
-	clang_tokenize(cxtup, range, &tokens, &numTokens);
-	printf("%u tokens (", numTokens);
-	for(int i = 0; i<numTokens; i++) {
-	    CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
-	    printf("%s ", clang_getCString(tokenstring));
-	}
-	clang_disposeTokens(cxtup, tokens, numTokens);
-	printf(")");
+        if(depth == 1) {
+	    CXToken* tokens;
+	    unsigned int numTokens;
+	    clang_tokenize(cxtup, range, &tokens, &numTokens);
+	    CXString tokenstring;
+	    CXSourceRange tokenrange;
+	    unsigned* startcol = malloc(sizeof(unsigned));
+	    unsigned* startline = malloc(sizeof(unsigned));
+	    unsigned* endcol = malloc(sizeof(unsigned));
+	    unsigned* endline = malloc(sizeof(unsigned));
+	    for(int i = 0; i<numTokens; i++) {
+	        tokenrange = clang_getTokenExtent(cxtup, tokens[i]);
+	        tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
+		CXSourceLocation currend = clang_getRangeEnd(tokenrange);
+		clang_getFileLocation(currend, NULL, endline, endcol, NULL);
+		if(prevcol != 0) {
+		    CXSourceLocation currstart = clang_getRangeStart(tokenrange);
+		    clang_getFileLocation(currstart, NULL, startline, startcol, NULL);
+		    //printf("L%u-%u, C%u-%u", *startline, prevline, *startcol, prevcol);
+                    int startl = *startline;
+		    int startc = *startcol;
+		    for(int i = 0; i < startl-prevline; i++) {
+		      printf("\n");
+		      //printf("*startline-prevline = %u, i = %u, prevline = %u\n", start-prevline, i, prevline);
+		    }
+		    for(int i = 0; i < startc-prevcol; i++) {
+		        printf(" ");
+		    }
+		}
+		printf("%s", clang_getCString(tokenstring));
+		prevline = *endline;
+		prevcol = *endcol;
+	    }
+	    clang_disposeTokens(cxtup, tokens, numTokens);
+	    free(startcol);
+	    free(startline);
+	    free(endcol);
+	    free(endline);
+        }
     }
-    free(curlines);
-    free(curlinee);
-    free(curcols);
-    free(curcole);
     if(node->children != NULL) {
-        if(clang_Location_isFromMainFile(rstart) != 0) {
-	    printf("->\n");
-	}
         struct treeListNode* childlist = node->children;
 	while(childlist != NULL) {
 	  printTree(childlist->node, cxtup);
 	    childlist = childlist->next;
-	}
-    } else {
-        if(clang_Location_isFromMainFile(rstart) != 0) {
-	    printf("\n");
 	}
     }
     depth--;
@@ -70,13 +71,12 @@ int main(int argc, char *argv[]) {
     if(argc == 2) {
         filename = argv[1];
     } else {
-      //filename = "Test1.c";
-        printUsage();
-        goto END;
+        filename = "Test1.c";
+      //printUsage();
+      //goto END;
     }
   
 
-  //filename = "Test1t.c";
     filefile = fopen(filename, "r+");
   
     kinds[1] = "CXCursor_UnexposedDecl";
@@ -289,7 +289,7 @@ int main(int argc, char *argv[]) {
     printTree(tree, cxtup);
     clang_disposeTranslationUnit(cxtup);
     clang_disposeIndex(cxi);
-    printf("Error Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", error, nodes, maxdepth);
+    printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", error, nodes, maxdepth);
 END:
     return 0;
 }
