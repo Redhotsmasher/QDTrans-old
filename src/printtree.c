@@ -16,7 +16,7 @@ void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
     CXSourceRange range = clang_getCursorExtent(node->cursor);
     CXSourceLocation rstart = clang_getRangeStart(range);
     if(clang_Location_isFromMainFile(rstart) != 0) {
-        if(depth == 1) {
+        if(depth == 0) {
 	    CXToken* tokens;
 	    unsigned int numTokens;
 	    clang_tokenize(cxtup, range, &tokens, &numTokens);
@@ -41,14 +41,20 @@ void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
 		      printf("\n");
 		      //printf("*startline-prevline = %u, i = %u, prevline = %u\n", start-prevline, i, prevline);
 		    }
-		    for(int i = 0; i < startc-prevcol; i++) {
-		        printf(" ");
+		    if(startc-prevcol >= 0) {
+		        for(int i = 0; i < startc-prevcol; i++) {
+			    printf(" ");
+			}
+		    } else {
+      		        for(int i = 1; i < startc; i++) {
+			    printf(" ");
+			}
 		    }
 		}
 		printf("%s", clang_getCString(tokenstring));
 		prevline = *endline;
 		prevcol = *endcol;
-	    }
+		}
 	    clang_disposeTokens(cxtup, tokens, numTokens);
 	    free(startcol);
 	    free(startline);
@@ -56,13 +62,13 @@ void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
 	    free(endline);
         }
     }
-    if(node->children != NULL) {
+    /*if(node->children != NULL) {
         struct treeListNode* childlist = node->children;
 	while(childlist != NULL) {
 	  printTree(childlist->node, cxtup);
 	    childlist = childlist->next;
 	}
-    }
+	}*/
     depth--;
 }
 
