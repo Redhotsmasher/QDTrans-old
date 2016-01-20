@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 struct treeListNode;
 
@@ -9,6 +10,8 @@ struct treeNode {
     CXCursor cursor;
     int childCount; // The number of children this node has.
     struct treeListNode* children;
+    boolean modified;
+    char* newContent;
 };
 
 struct treeListNode {
@@ -60,6 +63,17 @@ void addChild(struct treeNode* node, struct treeNode* child) {
 	node->children = newnode;
     }
 }
+
+void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNode* after) {
+    struct treeListNode* currnode = node->children;
+    while(currnode->next != NULL && (clang_equalCursors(currnode->cursor, after->cursor) == 0)) {
+        currnode = currnode->next;
+    }
+    struct treeListNode* newnode = malloc(sizeof(struct treeListNode));
+    newnode->node = child;
+    newnode->next = currnode->next;
+    currnode->next = newnode;
+} 
 
 enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData client_data) {
     nodes++;

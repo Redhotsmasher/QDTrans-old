@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 struct treeListNode;
 
@@ -36,6 +37,8 @@ struct treeNode {
     CXCursor cursor;
     int childCount; // The number of children this node has.
     struct treeListNode* children;
+    boolean modified;
+    char* newContent;
 };
 
 struct treeListNode {
