@@ -10,7 +10,7 @@ struct treeNode {
     CXCursor cursor;
     int childCount; // The number of children this node has.
     struct treeListNode* children;
-    boolean modified;
+    bool modified;
     char* newContent;
 };
 
@@ -43,6 +43,7 @@ int maxdepth;
 struct treeNode* currentnode;
 
 void addChild(struct treeNode* node, struct treeNode* child) {
+    node->childCount++;
     struct treeListNode* currnode = node->children;
     //printf("Add %i to %i.\n", child, currnode);
     if(currnode != NULL) {
@@ -65,8 +66,9 @@ void addChild(struct treeNode* node, struct treeNode* child) {
 }
 
 void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNode* after) {
+    node->childCount++;
     struct treeListNode* currnode = node->children;
-    while(currnode->next != NULL && (clang_equalCursors(currnode->cursor, after->cursor) == 0)) {
+    while(currnode->next != NULL && (clang_equalCursors(currnode->node->cursor, after->cursor) == 0)) {
         currnode = currnode->next;
     }
     struct treeListNode* newnode = malloc(sizeof(struct treeListNode));
@@ -80,8 +82,8 @@ enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData cli
     struct treeNode* newnode = malloc(sizeof(struct treeNode));
     newnode->cursor = cursor;
     newnode->children = NULL;
+    newnode->childCount = 0;
     //printf("vN: %i\n", currentnode);
-    currentnode->childCount++;
     //if((currentnode != NULL) && ())
     addChild(currentnode, newnode);
     return CXChildVisit_Continue;
@@ -95,7 +97,6 @@ void visitRecursive(struct treeListNode* node) {
 	}
 	struct treeListNode* nodeToVisit = node;
         while(nodeToVisit != NULL) {
-	    nodeToVisit->node->childCount++;
 	    currentnode = nodeToVisit->node;
 	    //printf("vRN: %i\n", currentnode);
 	    clang_visitChildren(nodeToVisit->node->cursor, visit, NULL);
