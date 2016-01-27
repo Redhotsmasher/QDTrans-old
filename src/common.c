@@ -75,7 +75,15 @@ void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNod
     newnode->node = child;
     newnode->next = currnode->next;
     currnode->next = newnode;
-} 
+}
+
+struct treeNode* getChild(struct treeNode* node, int childNum) {
+    struct treeListNode* currnode = node->children;
+    for(int i = 0; i < childNum; i++) {
+        currnode = currnode->next;
+    }
+    return currnode->node;
+}
 
 enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData client_data) {
     nodes++;

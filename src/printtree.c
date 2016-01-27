@@ -8,19 +8,20 @@ char* kinds[701];
 
 struct treeNode* tree;
 
-struct treeListNode* d1nodelist;
+struct treeNode* d1nodelist;
 
 char* lastPrintedToken;
 
 int prevline = 0;
 int prevcol = 0;
 
-void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
+void printTree(struct treeNode* node, CXTranslationUnit cxtup, int nodenum) {
     depth++;
     CXSourceRange range = clang_getCursorExtent(node->cursor);
     CXSourceLocation rstart = clang_getRangeStart(range);
     if(clang_Location_isFromMainFile(rstart) != 0) {
-        if(depth == 1) {
+	enum CXCursorKind cursorkind = clang_getCursorKind(node->cursor);
+        if(depth == 1 && cursorkind != CXCursor_MacroExpansion) {
 	  /*if(node->childCount != 0) {
 	        struct treeListNode* currnode = node->children;
 		while(currnode->next != NULL) {
@@ -88,13 +89,35 @@ void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
     if(node->children != NULL) {
         struct treeListNode* childlist = node->children;
 	while(childlist != NULL) {
-	    printTree(childlist->node, cxtup);
-	    childlist = childlist->next;
+	  if(depth == 1) {
+	      printTree(childlist->node, cxtup, nodenum+1);
+	  } else {
+	      printTree(childlist->node, cxtup, nodenum);
+	  }
+	  childlist = childlist->next;
 	}
     }
     depth--;
 }
 
+void scanTree(struct treeNode* node, CXTranslationUnit cxtup) {
+    depth++;
+    CXSourceRange range = clang_getCursorExtent(node->cursor);
+    CXSourceLocation rstart = clang_getRangeStart(range);
+    if(clang_Location_isFromMainFile(rstart) != 0) {
+        if(depth == 1) {
+	    addChild(d1nodelist, node);
+        }
+    }
+    if(node->children != NULL) {
+        struct treeListNode* childlist = node->children;
+	while(childlist != NULL) {
+	    scanTree(childlist->node, cxtup);
+	    childlist = childlist->next;
+	}
+    }
+    depth--;
+}
 
 int main(int argc, char *argv[]) {
   
@@ -121,9 +144,11 @@ int main(int argc, char *argv[]) {
     currentnode = tree;
     clang_visitChildren(cursor, visitor, NULL);
     visitRecursive(tree->children);
+    d1nodelist = malloc(sizeof(struct treeNode));
+    d1nodelist->children = malloc(sizeof(struct treeListNode));
     lastPrintedToken = malloc(500*sizeof(char));
     strcpy(lastPrintedToken, " ");
-    printTree(tree, cxtup);
+    printTree(tree, cxtup, 0);
     free(lastPrintedToken);
     clang_disposeTranslationUnit(cxtup);
     clang_disposeIndex(cxi);
