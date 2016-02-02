@@ -20,8 +20,6 @@ unsigned* parcol;
 unsigned* curcol2;
 unsigned* parcol2;
 
-char* space;
-
 FILE* filefile;
 
 const char* filename;
@@ -50,12 +48,16 @@ struct treeNode* currentnode;
 
 void addChild(struct treeNode* node, struct treeNode* child);
 
+void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNode* after);
+
+struct treeNode* getChild(struct treeNode* node, int childNum);
+  
 enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData client_data);
 
 void visitRecursive(struct treeListNode* node);
 
 enum CXChildVisitResult (*visitor)(CXCursor, CXCursor, CXClientData) = &visit;
 
-int printUsage();
+void disposeTree(struct treeNode* node);
 
 #endif /* QDTRANS_COMMON */

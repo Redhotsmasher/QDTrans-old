@@ -8,6 +8,14 @@ typedef struct{
     int value;
 }SharedInt;
 
+struct SharedInt2{
+    pthread_mutex_t lock;
+    int value;
+};
+
+typedef struct SharedInt2 *SharedInt2;
+
+
 sem_t sem;
 SharedInt* sip;
 

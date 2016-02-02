@@ -6,6 +6,8 @@
 
 char* kinds[701];
 
+char* space = "  ";
+
 struct treeNode* tree;
 
 void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
@@ -29,8 +31,9 @@ void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
     char* str3 = clang_getCString(cdisplaystring);
     char* str4 = clang_getCString(cspellstring);
     if(clang_Location_isFromMainFile(rstart) != 0) {
-	for(int i = depth; i > 0; i--) {
-	    printf("%s", space);
+      for(int i = 0; i < depth; i++) {
+	  printf("%s", space);
+	  //printf("%i", depth);
 	}
         printf("%s([%i]):%s \"%s\"; %s (L%u:C%u-L%u:C%u), containing ", str1, cursorkind, str2, str3, str4, *curlines, *curcols, *curlinee, *curcole);
 	CXToken* tokens;
@@ -43,23 +46,26 @@ void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
 	}
 	clang_disposeTokens(cxtup, tokens, numTokens);
 	printf(")");
-    }
-    free(curlines);
-    free(curlinee);
-    free(curcols);
-    free(curcole);
-    if(node->children != NULL) {
-        if(clang_Location_isFromMainFile(rstart) != 0) {
-	    printf("->\n");
-	}
-        struct treeListNode* childlist = node->children;
-	while(childlist != NULL) {
-	  printTree(childlist->node, cxtup);
-	    childlist = childlist->next;
-	}
-    } else {
-        if(clang_Location_isFromMainFile(rstart) != 0) {
-	    printf("\n");
+	clang_disposeString(typestring);
+	clang_disposeString(cdisplaystring);
+	clang_disposeString(cspellstring);
+	free(curlines);
+	free(curlinee);
+	free(curcols);
+	free(curcole);
+	if(node->children != NULL) {
+	    if(clang_Location_isFromMainFile(rstart) != 0) {
+	        printf("->\n");
+	    }
+	    struct treeListNode* childlist = node->children;
+	    while(childlist != NULL) {
+	        printTree(childlist->node, cxtup);
+		childlist = childlist->next;
+	    }
+	} else {
+	    if(clang_Location_isFromMainFile(rstart) != 0) {
+	        printf("\n");
+	    }
 	}
     }
     depth--;
@@ -289,7 +295,14 @@ int main(int argc, char *argv[]) {
     printTree(tree, cxtup);
     clang_disposeTranslationUnit(cxtup);
     clang_disposeIndex(cxi);
+    disposeTree(tree);
     printf("Error Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", error, nodes, maxdepth);
 END:
     return 0;
+}
+
+int printUsage() {
+    printf("USAGE:\n");
+    printf("\n");
+    printf("\tdumptree [FILENAME]\n");
 }

@@ -29,8 +29,6 @@ unsigned* parcol;
 unsigned* curcol2;
 unsigned* parcol2;
 
-char* space = "  ";
-
 FILE* filefile;
 
 const char* filename;
@@ -78,11 +76,16 @@ void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNod
 }
 
 struct treeNode* getChild(struct treeNode* node, int childNum) {
-    struct treeListNode* currnode = node->children;
-    for(int i = 0; i < childNum; i++) {
-        currnode = currnode->next;
+    if(childNum <= node->childCount) {
+        struct treeListNode* currnode = node->children;
+	for(int i = 1; i < childNum; i++) {
+	    currnode = currnode->next;
+	}
+	//printf("returning %i->node\n", currnode);
+	return currnode->node;
+    } else {
+        return NULL;
     }
-    return currnode->node;
 }
 
 enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData client_data) {
@@ -115,8 +118,17 @@ void visitRecursive(struct treeListNode* node) {
     }
 }
 
-int printUsage() {
-    printf("USAGE:\n");
-    printf("\n");
-    printf("\tdumptree [FILENAME]\n");
+void disposeTree(struct treeNode* node) {
+    if(node->childCount == 0) {
+        free(node);
+    } else {
+        struct treeListNode* current = node->children;
+	struct treeListNode* next = current;
+	while(next != NULL) {
+	    current = next;
+	    next = current->next;
+	    disposeTree(current->node);
+	    free(current);
+	}
+    }
 }
