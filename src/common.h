@@ -56,7 +56,7 @@ enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData cli
 
 void visitRecursive(struct treeListNode* node);
 
-enum CXChildVisitResult (*visitor)(CXCursor, CXCursor, CXClientData) = &visit;
+enum CXChildVisitResult (*visitor)(CXCursor, CXCursor, CXClientData);
 
 void disposeTree(struct treeNode* node);
 

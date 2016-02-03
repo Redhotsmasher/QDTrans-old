@@ -100,6 +100,8 @@ enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData cli
     return CXChildVisit_Continue;
 }
 
+enum CXChildVisitResult (*visitor)(CXCursor, CXCursor, CXClientData) = &visit;
+
 void visitRecursive(struct treeListNode* node) {
     if(node != NULL) {
         depth++;
