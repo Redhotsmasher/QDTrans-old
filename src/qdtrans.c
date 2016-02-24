@@ -76,22 +76,23 @@ void modifyTree(struct treeNode* node, CXTranslationUnit cxtup) {
 		    newnode->childCount = 0;
 		    newnode->children = NULL;
 		    newnode->modified = 1;
-		    CXSourceLocation endloc = clang_getRangeEnd(range);
+		    /*CXSourceLocation endloc = clang_getRangeEnd(range);
 		    unsigned eline;
 		    unsigned ecolumn;
 		    clang_getFileLocation(endloc, NULL, &eline, &ecolumn, NULL);
 		    //printf("node: %i, eline: %i, ecolumn: %i\n", newnode, eline, ecolumn);
 		    newnode->startline = eline;
-		    newnode->startcol = ecolumn;
+		    newnode->startcol = ecolumn;*/
 		    if(start) {
 		        newnode->newContent = malloc(40*sizeof(char));
 			strcpy(newnode->newContent, &"\n    printf(\"Critical section start!\")");
+			addChildAfter(node->parent, newnode, node);
 		    } else {
 		        newnode->newContent = malloc(38*sizeof(char));
 			strcpy(newnode->newContent, &"\n    printf(\"Critical section end!\")");
+			addChildBefore(node->parent, newnode, node);
 		    }
 		    //newnode->parent = node->parent;
-		    addChildAfter(node->parent, newnode, node);
 		}
 		clang_disposeString(cdisplaystring);
 	    }
