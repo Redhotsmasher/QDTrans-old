@@ -35,8 +35,13 @@ struct treeNode {
     CXCursor cursor;
     int childCount; // The number of children this node has.
     struct treeListNode* children;
-    bool modified;
+    int modified;
     char* newContent;
+    struct treeNode* parent;
+    struct treeListNode* modifiedNodes;
+    int startline;
+    int startcol;
+    bool validcursor;
 };
 
 struct treeListNode {

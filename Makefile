@@ -1,5 +1,5 @@
 CC=clang
-CFLAGS=-lclang
+CFLAGS=-std=c11 -lclang
 DFLAGS=-g
 
 all: common.o dumptree printer.o printtree qdtrans
@@ -31,7 +31,7 @@ debug_qdtrans: debug_common.o debug_printer.o
 	$(CC) src/qdtrans.c $(CFLAGS) $(DFLAGS) bin/common.o bin/printer.o -o bin/qdtrans
 
 debug_printer.o: debug_common.o
-	$(CC) src/printer.c $(CFLAGS) $(DFLAGS) -o bin/printer.o
+	$(CC) -c src/printer.c $(CFLAGS) $(DFLAGS) -o bin/printer.o
 
 debug_common.o: 
 	$(CC) -c src/common.c $(CFLAGS) $(DFLAGS) -o bin/common.o
