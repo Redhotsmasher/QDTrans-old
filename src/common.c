@@ -1,8 +1,10 @@
-#include "clang+llvm-3.7.0-x86_64-linux-gnu-ubuntu-14.04/include/clang-c/Index.h"
+#include <clang-c/Index.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+
+int visitcounter = 0;
 
 struct treeListNode;
 
@@ -24,6 +26,17 @@ struct treeListNode {
     struct treeListNode* next;
 };
 
+struct nodeTree {
+    struct treeNode* root;
+    CXIndex cxi;
+    CXTranslationUnit cxtup;
+    CXFile file;
+    FILE* filefile;
+    enum CXErrorCode error;
+    int nodes;
+    int unmodifiedDepth;
+};
+
 CXFile* file;
 unsigned* curline;
 unsigned* parline;
@@ -36,12 +49,8 @@ unsigned* parcol2;
 
 FILE* filefile;
 
-const char* filename;
-
 int nodes = 0;
 int depth = -1;
-
-int maxdepth;
 
 struct treeNode* currentnode;
 
@@ -176,6 +185,7 @@ enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData cli
     newnode->childCount = 0;
     newnode->modified = 0;
     newnode->newContent = NULL;
+    newnode->modifiedNodes = NULL;
     unsigned sline;
     unsigned scolumn;
     newnode->startline = -1;
@@ -183,31 +193,84 @@ enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData cli
     newnode->validcursor = true;
     //printf("vN: %i\n", currentnode);
     //if((currentnode != NULL) && ())
+    //visitcounter++;
     addChild(currentnode, newnode);
     return CXChildVisit_Continue;
 }
 
 enum CXChildVisitResult (*visitor)(CXCursor, CXCursor, CXClientData) = &visit;
 
-void visitRecursive(struct treeListNode* node) {
+void visitRecursive(struct treeListNode* node, struct nodeTree* tree) {
     if(node != NULL) {
         depth++;
-	if(depth > maxdepth) {
-	    maxdepth = depth;
+	if(depth > tree->unmodifiedDepth) {
+	    tree->unmodifiedDepth = depth;
 	}
 	struct treeListNode* nodeToVisit = node;
         while(nodeToVisit != NULL) {
 	    currentnode = nodeToVisit->node;
 	    //printf("vRN: %i\n", currentnode);
+	    tree->nodes = tree->nodes + currentnode->childCount;
 	    clang_visitChildren(nodeToVisit->node->cursor, visit, NULL);
-	    visitRecursive(nodeToVisit->node->children);
+	    visitRecursive(nodeToVisit->node->children, tree);
 	    nodeToVisit = nodeToVisit->next;
 	}
 	depth--;
     }
 }
 
-void disposeTree(struct treeNode* node) {
+struct nodeTree* generateTree(char* filename) {
+    printf("%s\n", filename);
+    filefile = fopen(filename, "r+");
+    struct nodeTree* ntree = malloc(sizeof(struct nodeTree));
+    struct treeNode* thetree = malloc(sizeof(struct treeNode));
+    ntree->filefile = filefile;
+    ntree->root = thetree;
+    CXIndex cxix = clang_createIndex(1, 0);
+    ntree->cxi = cxix;
+    printf("cxix: %lx, cxi: %lx\n", cxix, ntree->cxi);
+    unsigned flags = (CXTranslationUnit_DetailedPreprocessingRecord | CXTranslationUnit_Incomplete);
+    CXTranslationUnit cxtu = clang_createTranslationUnit(cxix, filename);
+    ntree->cxtup = cxtu;
+    ntree->cxi = cxix;
+    printf("qdtranscxtup: %lx\n", ntree->cxtup);
+    printf("cxix: %lx, cxi: %lx, cxtu: %lx, cxtup: %lx\n", cxix, ntree->cxi, cxtu, ntree->cxtup);
+    printf("qdtranscxtup: %lx\n", ntree->cxtup);
+    ntree->error = clang_parseTranslationUnit2(cxix, filename, NULL, 0, NULL, 0, flags, &cxtu);
+    ntree->cxi = cxix;
+    ntree->cxtup = cxtu;
+    printf("cxix: %lx, cxi: %lx, cxtu: %lx, cxtup: %lx\n", cxix, ntree->cxi, cxtu, ntree->cxtup);
+    printf("qdtranscxtup: %lx\n", ntree->cxtup);
+    file = clang_getFile (cxtu, filename);
+    ntree->file = file;
+    CXCursor cursor = clang_getTranslationUnitCursor(cxtu);
+    thetree->cursor = cursor;
+    thetree->modified = 0;
+    thetree->validcursor = true;
+    thetree->parent = NULL;
+    thetree->modifiedNodes = NULL;
+    thetree->startline = -1;
+    thetree->startcol = -1;
+    thetree->children = NULL;
+    thetree->newContent = NULL;
+    currentnode = thetree;
+    clang_visitChildren(cursor, visitor, NULL);
+    visitRecursive(thetree->children, ntree);
+    printf("Visits: %dx", visitcounter);
+    return(ntree);
+}
+
+void disposeTree2(struct treeNode* node);
+
+void disposeTree(struct nodeTree* tree) {
+    disposeTree2(tree->root);
+    clang_disposeTranslationUnit(tree->cxtup);
+    clang_disposeIndex(tree->cxi);
+    fclose(tree->filefile);
+    free(tree);
+}
+
+void disposeTree2(struct treeNode* node) {
     if(node->newContent != NULL) {
         free(node->newContent);
     }
@@ -219,7 +282,7 @@ void disposeTree(struct treeNode* node) {
 	while(next != NULL) {
 	    current = next;
 	    next = current->next;
-	    disposeTree(current->node);
+	    disposeTree2(current->node);
 	    free(current);
 	}
 	if(node->modified != 0) {

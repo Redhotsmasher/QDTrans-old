@@ -1,6 +1,6 @@
 CC=clang
-CFLAGS=-std=c11 -lclang
-DFLAGS=-g
+CFLAGS=-std=c11 -lclang -I /usr/lib/llvm-3.6/include/
+DFLAGS=-g -fsanitize=address
 
 all: common.o dumptree printer.o printtree qdtrans
 

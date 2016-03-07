@@ -1,4 +1,4 @@
-#include "clang+llvm-3.7.0-x86_64-linux-gnu-ubuntu-14.04/include/clang-c/Index.h"
+#include <clang-c/Index.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,8 +7,6 @@
 char* kinds[701];
 
 char* space = "  ";
-
-struct treeNode* tree;
 
 void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
     depth++;
@@ -279,24 +277,28 @@ int main(int argc, char *argv[]) {
     kinds[700] = "CXCursor_OverloadCandidate";
     
     
-    CXIndex cxi = clang_createIndex(1, 0);
+    /*CXIndex cxi = clang_createIndex(1, 0);
     unsigned flags = (CXTranslationUnit_DetailedPreprocessingRecord | CXTranslationUnit_Incomplete);
     //const char* filename = "/home/redhotsmasher/QDTrans/src/Test1.c";
     //CXTranslationUnit cxtu = clang_createTranslationUnitFromSourceFile (cxi, filename, 0, NULL, 0, NULL);
     CXTranslationUnit cxtup = clang_createTranslationUnit(cxi, filename);
+    printf("cxi: %lx, cxtup: %lx\n", cxi, cxtup);
     enum CXErrorCode error = clang_parseTranslationUnit2(cxi, filename, NULL, 0, NULL, 0, flags, &cxtup);
     file = clang_getFile (cxtup, filename);
+    printf("cxi: %lx, cxtup: %lx\n", cxi, cxtup);
     CXCursor cursor = clang_getTranslationUnitCursor(cxtup);
     tree = malloc(sizeof(struct treeNode));
     tree->cursor = cursor;
+    tree->children = NULL;
     currentnode = tree;
     clang_visitChildren(cursor, visitor, NULL);
-    visitRecursive(tree->children);
-    printTree(tree, cxtup);
-    clang_disposeTranslationUnit(cxtup);
-    clang_disposeIndex(cxi);
+    visitRecursive(tree->children);*/
+    struct nodeTree* tree = generateTree(filename);
+    printTree(tree->root, tree->cxtup);
+    //clang_disposeTranslationUnit(cxtup);
+    //clang_disposeIndex(cxi);
     disposeTree(tree);
-    printf("Error Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", error, nodes, maxdepth);
+    printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", tree->error, tree->nodes, tree->unmodifiedDepth);
 END:
     return 0;
 }

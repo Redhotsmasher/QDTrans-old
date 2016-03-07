@@ -1,10 +1,29 @@
-#include "clang+llvm-3.7.0-x86_64-linux-gnu-ubuntu-14.04/include/clang-c/Index.h"
+#include <clang-c/Index.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 #include "common.h"
 #include "printer.h"
+
+/*
+struct variable {
+    char* type;
+    char* name;
+    bool written;
+    struct variable* next;
+    CXCursor decl;
+};
+
+struct criticalSection {
+    struct variable* critVars;
+};
+
+struct mutexLock {
+    struct variable* critVars;
+    struct criticalSection* critSects;
+    CXCursor decl;
+};*/
 
 struct treeNode* thetree;
 
@@ -16,6 +35,8 @@ void modifyTree(struct treeNode* node, CXTranslationUnit cxtup);
 
 void debugTree(struct treeNode* node, CXTranslationUnit cxtup);
 
+void printQDUsage();
+
 int main(int argc, char *argv[]) {
   
     if(argc == 2) {
@@ -25,32 +46,12 @@ int main(int argc, char *argv[]) {
         printQDUsage();
         goto END;
     }
-  
-    filefile = fopen(filename, "r+");    
-    
-    CXIndex cxi = clang_createIndex(1, 0);
-    unsigned flags = (CXTranslationUnit_DetailedPreprocessingRecord | CXTranslationUnit_Incomplete);
-    CXTranslationUnit cxtup = clang_createTranslationUnit(cxi, filename);
-    enum CXErrorCode error = clang_parseTranslationUnit2(cxi, filename, NULL, 0, NULL, 0, flags, &cxtup);
-    file = clang_getFile (cxtup, filename);
-    CXCursor cursor = clang_getTranslationUnitCursor(cxtup);
-    thetree = malloc(sizeof(struct treeNode));
-    thetree->cursor = cursor;
-    thetree->modified = 0;
-    thetree->validcursor = true;
-    thetree->parent = NULL;
-    thetree->modifiedNodes = NULL;
-    thetree->startline = -1;
-    thetree->startcol = -1;
-    currentnode = thetree;
-    clang_visitChildren(cursor, visitor, NULL);
-    visitRecursive(thetree->children);
-    modifyTree(thetree, cxtup);
-    printTree(thetree, cxtup);
-    disposeTree(thetree);
-    clang_disposeTranslationUnit(cxtup);
-    clang_disposeIndex(cxi);
-    printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", error, nodes, maxdepth);
+    struct nodeTree* tree = generateTree(filename);
+    printf("qdtranscxtup: %lx\n", tree->cxtup);
+    modifyTree(tree->root, tree->cxtup);
+    printTree(tree);
+    printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", tree->error, tree->nodes, tree->unmodifiedDepth);
+    disposeTree(tree);
 END:
     return 0;
 }
@@ -84,12 +85,12 @@ void modifyTree(struct treeNode* node, CXTranslationUnit cxtup) {
 		    newnode->startline = eline;
 		    newnode->startcol = ecolumn;*/
 		    if(start) {
-		        newnode->newContent = malloc(40*sizeof(char));
-			strcpy(newnode->newContent, &"\n    printf(\"Critical section start!\")");
+		        newnode->newContent = malloc(41*sizeof(char));
+			strcpy(newnode->newContent, &"\n    printf(\"Critical section start!\");");
 			addChildAfter(node->parent, newnode, node);
 		    } else {
-		        newnode->newContent = malloc(38*sizeof(char));
-			strcpy(newnode->newContent, &"\n    printf(\"Critical section end!\")");
+		        newnode->newContent = malloc(39*sizeof(char));
+			strcpy(newnode->newContent, &"\n    printf(\"Critical section end!\");");
 			addChildBefore(node->parent, newnode, node);
 		    }
 		    //newnode->parent = node->parent;
@@ -101,7 +102,7 @@ void modifyTree(struct treeNode* node, CXTranslationUnit cxtup) {
     if(node->children != NULL) {
         struct treeListNode* childlist = node->children;
 	while(childlist != NULL) {
-	    modifyTree(childlist->node, cxtup);
+	  modifyTree(childlist->node, cxtup);
 	    childlist = childlist->next;
 	}
     }
@@ -153,7 +154,7 @@ void debugTree(struct treeNode* node, CXTranslationUnit cxtup) {
 		}
 	        struct treeListNode* childlist = node->children;
 	        while(childlist != NULL) {
-	            debugTree(childlist->node, cxtup);
+		  debugTree(childlist->node, cxtup);
 		    childlist = childlist->next;
 		}
 	    } else {
@@ -181,7 +182,7 @@ void debugTree(struct treeNode* node, CXTranslationUnit cxtup) {
 	    printf("->\n");
 	    struct treeListNode* childlist = node->children;
 	    while(childlist != NULL) {
-	        debugTree(childlist->node, cxtup);
+	      debugTree(childlist->node, cxtup);
 		childlist = childlist->next;
 	    }
 	} else {
@@ -191,7 +192,7 @@ void debugTree(struct treeNode* node, CXTranslationUnit cxtup) {
     depth--;
 }
 
-int printQDUsage() {
+void printQDUsage() {
     printf("USAGE:\n");
     printf("\n");
     printf("\tqdtrans [FILENAME]\n");

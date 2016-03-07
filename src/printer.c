@@ -1,4 +1,4 @@
-#include "clang+llvm-3.7.0-x86_64-linux-gnu-ubuntu-14.04/include/clang-c/Index.h"
+#include <clang-c/Index.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -78,11 +78,11 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 			    }
 			}
 			char* tstr = clang_getCString(tokenstring);
-			if(i == 0 && !strcmp(tstr, lastPrintedToken)) {	    
+			/*if(i == 0 && !strcmp(tstr, lastPrintedToken)) {	    
 			    // Do nothing, print nothing.
-			} else {
+			    } else {*/
 			    printf("%s", tstr);
-			}
+			    //}
 			prevline = *endline;
 			prevcol = *endcol;
 			char* str = clang_getCString(tokenstring);
@@ -274,7 +274,9 @@ void scanTree(struct treeNode* node, CXTranslationUnit cxtup) {
 }
 */
 
-void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
+void printTree(struct nodeTree* inTree) {
+    struct treeNode* node = inTree->root;
+    CXTranslationUnit cxtup = inTree->cxtup;
     lastPrintedToken = malloc(500*sizeof(char));
     strcpy(lastPrintedToken, " ");
     printTreeRecursive(node, cxtup);

@@ -1,6 +1,6 @@
 #ifndef QDTRANS_COMMON
 #define QDTRANS_COMMON
-#include "clang+llvm-3.7.0-x86_64-linux-gnu-ubuntu-14.04/include/clang-c/Index.h"
+#include <clang-c/Index.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -27,8 +27,6 @@ const char* filename;
 int nodes;
 int depth;
 
-int maxdepth;
-
 struct treeListNode;
 
 struct treeNode {
@@ -49,6 +47,17 @@ struct treeListNode {
     struct treeListNode* next;
 };
 
+struct nodeTree {
+    struct treeNode* root;
+    CXIndex cxi;
+    CXTranslationUnit cxtup;
+    CXFile file;
+    FILE* filefile;
+    enum CXErrorCode error;
+    int nodes;
+    int unmodifiedDepth;
+};
+
 struct treeNode* currentnode;
 
 void addChild(struct treeNode* node, struct treeNode* child);
@@ -59,10 +68,12 @@ struct treeNode* getChild(struct treeNode* node, int childNum);
   
 enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData client_data);
 
-void visitRecursive(struct treeListNode* node);
+void visitRecursive(struct treeListNode* node, struct nodeTree* tree);
+
+struct nodeTree* generateTree(char* filename);
 
 enum CXChildVisitResult (*visitor)(CXCursor, CXCursor, CXClientData);
 
-void disposeTree(struct treeNode* node);
+void disposeTree(struct nodeTree* tree);
 
 #endif /* QDTRANS_COMMON */

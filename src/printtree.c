@@ -1,4 +1,4 @@
-#include "clang+llvm-3.7.0-x86_64-linux-gnu-ubuntu-14.04/include/clang-c/Index.h"
+#include <clang-c/Index.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
       goto END;
     }
   
-    filefile = fopen(filename, "r+");    
+    /*filefile = fopen(filename, "r+");    
     
     CXIndex cxi = clang_createIndex(1, 0);
     unsigned flags = (CXTranslationUnit_DetailedPreprocessingRecord | CXTranslationUnit_Incomplete);
@@ -37,13 +37,12 @@ int main(int argc, char *argv[]) {
     d1nodelist->childCount = 0;*/
   /*scanTree(tree, cxtup);
     //printf("d1nodelist size: %i\n", d1nodelist->childCount);*/
-    printTree(tree, cxtup);
+    struct nodeTree* tree = generateTree(filename);
+    printTree(tree);
     //printTree(d1nodelist, cxtup, 0);
     //disposeTree(d1nodelist);
     disposeTree(tree);
-    clang_disposeTranslationUnit(cxtup);
-    clang_disposeIndex(cxi);
-    printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", error, nodes, maxdepth);
+    printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", tree->error, tree->nodes, tree->unmodifiedDepth);
 END:
     return 0;
 }
