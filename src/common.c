@@ -202,6 +202,7 @@ enum CXChildVisitResult (*visitor)(CXCursor, CXCursor, CXClientData) = &visit;
 
 void visitRecursive(struct treeListNode* node, struct nodeTree* tree) {
     if(node != NULL) {
+        tree->nodes = tree->nodes + node->node->parent->childCount;
         depth++;
 	if(depth > tree->unmodifiedDepth) {
 	    tree->unmodifiedDepth = depth;
@@ -210,7 +211,6 @@ void visitRecursive(struct treeListNode* node, struct nodeTree* tree) {
         while(nodeToVisit != NULL) {
 	    currentnode = nodeToVisit->node;
 	    //printf("vRN: %i\n", currentnode);
-	    tree->nodes = tree->nodes + currentnode->childCount;
 	    clang_visitChildren(nodeToVisit->node->cursor, visit, NULL);
 	    visitRecursive(nodeToVisit->node->children, tree);
 	    nodeToVisit = nodeToVisit->next;
@@ -255,6 +255,7 @@ struct nodeTree* generateTree(char* filename) {
     thetree->newContent = NULL;
     currentnode = thetree;
     clang_visitChildren(cursor, visitor, NULL);
+    ntree->nodes = 0;
     visitRecursive(thetree->children, ntree);
     printf("Visits: %dx", visitcounter);
     return(ntree);

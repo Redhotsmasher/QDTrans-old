@@ -66,13 +66,7 @@ void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNod
 
 struct treeNode* getChild(struct treeNode* node, int childNum);
   
-enum CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData client_data);
-
-void visitRecursive(struct treeListNode* node, struct nodeTree* tree);
-
 struct nodeTree* generateTree(char* filename);
-
-enum CXChildVisitResult (*visitor)(CXCursor, CXCursor, CXClientData);
 
 void disposeTree(struct nodeTree* tree);
 
