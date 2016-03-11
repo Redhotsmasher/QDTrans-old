@@ -45,13 +45,7 @@ void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
 	}
 	clang_disposeTokens(cxtup, tokens, numTokens);
 	printf(")");
-	clang_disposeString(typestring);
-	clang_disposeString(cdisplaystring);
-	clang_disposeString(cspellstring);
-	free(curlines);
-	free(curlinee);
-	free(curcols);
-	free(curcole);
+	
 	if(node->children != NULL) {
 	    if(clang_Location_isFromMainFile(rstart) != 0) {
 	        printf("->\n");
@@ -67,6 +61,13 @@ void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
 	    }
 	}
     }
+    clang_disposeString(typestring);
+    clang_disposeString(cdisplaystring);
+    clang_disposeString(cspellstring);
+    free(curlines);
+    free(curlinee);
+    free(curcols);
+    free(curcole);
     depth--;
 }
 
@@ -277,27 +278,8 @@ int main(int argc, char *argv[]) {
 
     kinds[700] = "CXCursor_OverloadCandidate";
     
-    
-    /*CXIndex cxi = clang_createIndex(1, 0);
-    unsigned flags = (CXTranslationUnit_DetailedPreprocessingRecord | CXTranslationUnit_Incomplete);
-    //const char* filename = "/home/redhotsmasher/QDTrans/src/Test1.c";
-    //CXTranslationUnit cxtu = clang_createTranslationUnitFromSourceFile (cxi, filename, 0, NULL, 0, NULL);
-    CXTranslationUnit cxtup = clang_createTranslationUnit(cxi, filename);
-    printf("cxi: %lx, cxtup: %lx\n", cxi, cxtup);
-    enum CXErrorCode error = clang_parseTranslationUnit2(cxi, filename, NULL, 0, NULL, 0, flags, &cxtup);
-    file = clang_getFile (cxtup, filename);
-    printf("cxi: %lx, cxtup: %lx\n", cxi, cxtup);
-    CXCursor cursor = clang_getTranslationUnitCursor(cxtup);
-    tree = malloc(sizeof(struct treeNode));
-    tree->cursor = cursor;
-    tree->children = NULL;
-    currentnode = tree;
-    clang_visitChildren(cursor, visitor, NULL);
-    visitRecursive(tree->children);*/
     struct nodeTree* tree = generateTree(filename);
     printTree(tree->root, tree->cxtup);
-    //clang_disposeTranslationUnit(cxtup);
-    //clang_disposeIndex(cxi);
     printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", tree->error, tree->nodes, tree->unmodifiedDepth);
     disposeTree(tree);
 END:

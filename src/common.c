@@ -4,8 +4,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-int visitcounter = 0;
-
 struct treeListNode;
 
 struct treeNode {
@@ -233,14 +231,14 @@ struct nodeTree* generateTree(char* filename) {
     CXTranslationUnit cxtu = clang_createTranslationUnit(cxix, filename);
     ntree->cxtup = cxtu;
     ntree->cxi = cxix;
-    printf("qdtranscxtup: %lx\n", ntree->cxtup);
-    printf("cxix: %lx, cxi: %lx, cxtu: %lx, cxtup: %lx\n", cxix, ntree->cxi, cxtu, ntree->cxtup);
-    printf("qdtranscxtup: %lx\n", ntree->cxtup);
+    //printf("qdtranscxtup: %lx\n", ntree->cxtup);
+    //printf("cxix: %lx, cxi: %lx, cxtu: %lx, cxtup: %lx\n", cxix, ntree->cxi, cxtu, ntree->cxtup);
+    //printf("qdtranscxtup: %lx\n", ntree->cxtup);
     ntree->error = clang_parseTranslationUnit2(cxix, filename, NULL, 0, NULL, 0, flags, &cxtu);
     ntree->cxi = cxix;
     ntree->cxtup = cxtu;
-    printf("cxix: %lx, cxi: %lx, cxtu: %lx, cxtup: %lx\n", cxix, ntree->cxi, cxtu, ntree->cxtup);
-    printf("qdtranscxtup: %lx\n", ntree->cxtup);
+    //printf("cxix: %lx, cxi: %lx, cxtu: %lx, cxtup: %lx\n", cxix, ntree->cxi, cxtu, ntree->cxtup);
+    //printf("qdtranscxtup: %lx\n", ntree->cxtup);
     file = clang_getFile (cxtu, filename);
     ntree->file = file;
     CXCursor cursor = clang_getTranslationUnitCursor(cxtu);
@@ -257,7 +255,7 @@ struct nodeTree* generateTree(char* filename) {
     clang_visitChildren(cursor, visitor, NULL);
     ntree->nodes = 0;
     visitRecursive(thetree->children, ntree);
-    printf("Visits: %dx", visitcounter);
+    //printf("Visits: %dx", visitcounter);
     return(ntree);
 }
 
