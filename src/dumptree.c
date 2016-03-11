@@ -41,6 +41,7 @@ void printTree(struct treeNode* node, CXTranslationUnit cxtup) {
 	for(int i = 0; i<numTokens; i++) {
 	    CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
 	    printf("%s ", clang_getCString(tokenstring));
+	    clang_disposeString(tokenstring);
 	}
 	clang_disposeTokens(cxtup, tokens, numTokens);
 	printf(")");
@@ -297,8 +298,8 @@ int main(int argc, char *argv[]) {
     printTree(tree->root, tree->cxtup);
     //clang_disposeTranslationUnit(cxtup);
     //clang_disposeIndex(cxi);
-    disposeTree(tree);
     printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", tree->error, tree->nodes, tree->unmodifiedDepth);
+    disposeTree(tree);
 END:
     return 0;
 }

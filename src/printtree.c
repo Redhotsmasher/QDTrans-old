@@ -41,8 +41,8 @@ int main(int argc, char *argv[]) {
     printTree(tree);
     //printTree(d1nodelist, cxtup, 0);
     //disposeTree(d1nodelist);
-    disposeTree(tree);
     printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", tree->error, tree->nodes, tree->unmodifiedDepth);
+    disposeTree(tree);
 END:
     return 0;
 }
