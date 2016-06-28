@@ -14,7 +14,7 @@
 #ifndef LLVM_CLANG_C_CXERRORCODE_H
 #define LLVM_CLANG_C_CXERRORCODE_H
 
-#include "clang-c/Platform.h"
+#include "Platform.h"
 
 #ifdef __cplusplus
 extern "C" {
