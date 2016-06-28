@@ -40,6 +40,7 @@ int moddepth;
 void modifyTree(struct treeNode* node, CXTranslationUnit cxtup);
 void debugTree(struct treeNode* node, CXTranslationUnit cxtup);
 void debugTree2(struct treeNode* node, CXTranslationUnit cxtup);
+void debugTree3(struct treeNode* node, CXTranslationUnit cxtup);
 void debugNode(struct treeNode* node, CXTranslationUnit cxtup);
 void debugCrits(struct criticalSection* crits, CXTranslationUnit cxtup);
 void printCrit(struct criticalSection* crit, CXTranslationUnit cxtup);

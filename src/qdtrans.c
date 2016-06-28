@@ -54,6 +54,8 @@ void debugTree(struct treeNode* node, CXTranslationUnit cxtup);
 
 void debugTree2(struct treeNode* node, CXTranslationUnit cxtup);
 
+void debugTree3(struct treeNode* node, CXTranslationUnit cxtup);
+
 void debugNode(struct treeNode* node, CXTranslationUnit cxtup);
 
 void debugCrits(struct criticalSection* crits, CXTranslationUnit cxtup);
@@ -853,6 +855,102 @@ void debugTree2(struct treeNode* node, CXTranslationUnit cxtup) {
     depth--;
 }
 
+void debugTree3(struct treeNode* node, CXTranslationUnit cxtup) {
+    tnodes++;
+    depth++;
+    if(depth > moddepth) {
+        moddepth = depth;
+    }
+    if(node->validcursor == true) {
+        if(node->modified > 0) {
+	    printf("\n%i@%i[\n", node->modified, depth);
+	    struct treeListNode* modlist = node->modifiedNodes;
+	    while(modlist->next != NULL) {
+	        printf("    %s\n", modlist->node->newContent);
+		modlist = modlist->next;
+	    }
+	    printf("    %s\n", modlist->node->newContent);
+	    printf("\n]\n");
+        }
+        CXType type = clang_getCursorType(node->cursor);
+	CXString typestring = clang_getTypeSpelling(type);
+	CXString cdisplaystring = clang_getCursorDisplayName(node->cursor);
+	CXString cspellstring = clang_getCursorSpelling(node->cursor);
+	unsigned* curlines = malloc(sizeof(unsigned));
+	unsigned* curlinee = malloc(sizeof(unsigned));
+	unsigned* curcols = malloc(sizeof(unsigned));
+	unsigned* curcole = malloc(sizeof(unsigned));
+	CXSourceRange range = clang_getCursorExtent(node->cursor);
+	CXSourceLocation rstart = clang_getRangeStart(range);
+	CXSourceLocation rend = clang_getRangeEnd(range);
+	clang_getFileLocation (rstart, NULL, curlines, curcols, NULL);
+	clang_getFileLocation (rend, NULL, curlinee, curcole, NULL);
+	enum CXCursorKind cursorkind = clang_getCursorKind(node->cursor);
+	char* str2 = clang_getCString(typestring);
+	char* str3 = clang_getCString(cdisplaystring);
+	char* str4 = clang_getCString(cspellstring);
+	if(clang_Location_isFromMainFile(rstart) != 0) {
+	    printf("VN");
+	} else {
+	    printf("BN");
+	}
+	for(int i = 0; i < depth; i++) {
+	    printf("%s", space);
+	    //printf("%i", depth);
+	}
+	printf("%i@%i, [%i]:%s \"%s\"; %s (L%u:C%u-L%u:C%u), containing ", node->modified, depth, cursorkind, str2, str3, str4, *curlines, *curcols, *curlinee, *curcole);
+	CXToken* tokens;
+	unsigned int numTokens;
+	clang_tokenize(cxtup, range, &tokens, &numTokens);
+	printf("%u tokens (", numTokens);
+	for(int i = 0; i<numTokens; i++) {
+	    CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
+	    printf("%s ", clang_getCString(tokenstring));
+	}
+	clang_disposeTokens(cxtup, tokens, numTokens);
+	printf(")");
+	if(node->children != NULL) {
+	    if(clang_Location_isFromMainFile(rstart) != 0) {
+	        printf("->\n");
+	    }
+	    struct treeListNode* childlist = node->children;
+	    while(childlist != NULL) {
+	        debugTree3(childlist->node, cxtup);
+		childlist = childlist->next;
+	    }
+	} else {
+	    printf("\n");
+	}
+	clang_disposeString(typestring);
+	clang_disposeString(cdisplaystring);
+	clang_disposeString(cspellstring);
+	free(curlines);
+	free(curlinee);
+	free(curcols);
+	free(curcole);
+    } else {
+        printf("IN");
+	printf("\n%i@%i[\n", node->modified, depth);
+        tnodes++;
+        moddednodes++;
+        for(int i = 0; i < depth; i++) {
+	    printf("%s", space);
+	}
+	printf("%i, %s", node->modified, node->newContent);
+	if(node->children != NULL) {
+	    printf("->\n");
+	    struct treeListNode* childlist = node->children;
+	    while(childlist != NULL) {
+	        debugTree3(childlist->node, cxtup);
+	        childlist = childlist->next;
+	    }
+	} else {
+	    printf("\n");
+	}
+    }
+    depth--;
+}
+
 void debugNode(struct treeNode* node, CXTranslationUnit cxtup) {
     printf("Debugging treeNode: %012lX\n", node);
     if(node->validcursor == true) {
@@ -946,6 +1044,8 @@ void printCrit(struct criticalSection* crit, CXTranslationUnit cxtup) {
 	    printf("    %s\n", currvar->name);
 	    currvar = currvar->next;
 	}
+    } else {
+        printf("crit->accessedvars == NULL\n");
     }
     int listsize = 0;
     struct treeListNode* currnode = crit->nodelist;

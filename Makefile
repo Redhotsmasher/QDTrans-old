@@ -4,15 +4,20 @@ MDFLAGS=-fsanitize=address
 OPTLEV=3
 DOPTLEV=0
 
+
 build: main utils
 
 all: main utils tests
 
 utils: common.o dumptree printer.o printtree
 
+tests: test0
+
 debug: debug_common.o debug_dumptree debug_printer.o debug_printtree debug_qdtrans.o debug_main
 
 mdebug: mdebug_common.o mdebug_dumptree mdebug_printer.o mdebug_printtree mdebug_qdtrans.o mdebug_main
+
+
 
 dumptree: common.o
 	$(CC) src/dumptree.c -O$(OPTLEV) $(CFLAGS) bin/common.o -o bin/dumptree
@@ -70,3 +75,16 @@ mdebug_main: mdebug_common.o mdebug_printer.o mdebug_qdtrans.o
 
 clean:
 	rm -f bin/*
+
+
+
+test0: test0a test0b test0c
+
+test0a: common.o printer.o qdtrans.o
+	$(CC) tests/test0a.c $(CFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0a
+
+test0b: common.o printer.o qdtrans.o
+	$(CC) tests/test0b.c $(CFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0b
+
+test0c: common.o printer.o qdtrans.o
+	$(CC) tests/test0c.c $(CFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0c

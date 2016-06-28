@@ -3,3 +3,9 @@ install: true
 compiler:
   - clang
   - gcc
+script:
+  - make test0
+  - ./bin/test0a
+  - ./bin/test0b
+  - ./bin/test0c
+  - make clean
