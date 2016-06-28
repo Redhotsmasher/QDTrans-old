@@ -2,8 +2,6 @@
 
 int counter = 0;
 
-int depth = 0;
-
 struct criticalSection* crits = NULL;
 
 int main(int argc, char *argv[]) {

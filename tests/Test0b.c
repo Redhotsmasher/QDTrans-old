@@ -2,7 +2,7 @@
 
 int counter = 0;
 
-int depth = 0;
+int depth2 = 0;
 
 int main(int argc, char *argv[]) {
     filename = "./tests/testfiles/Test0.c";
@@ -26,25 +26,25 @@ END:
 }
 
 int traverseTree (struct treeNode* node, CXTranslationUnit cxtup) {
-    depth++;
+    depth2++;
     if(node->children != NULL) {
 	struct treeListNode* childlist = node->children;
 	while(childlist != NULL) {
 	    if(childlist->node->modified > 0) {
-	        if(depth == 1) {
+	        if(depth2 == 1) {
 		     counter++;
 	        }
 	        checkTree(childlist->node, cxtup);
 	    }
 	    childlist = childlist->next;
 	}
-    depth--;
+    depth2--;
     }
 }
 
 int checkTree (struct treeNode* node, CXTranslationUnit cxtup) {
-    depth++;
-    depth++;
+    depth2++;
+    depth2++;
     struct treeListNode* childlist = node->children->node->children;
     struct treeNode* nodeToTest = childlist->next->next;
     if ((nodeToTest->node->modified == 1) && (strcmp(nodeToTest->node->newContent, &"\nstart") == 0)) {
@@ -54,6 +54,6 @@ int checkTree (struct treeNode* node, CXTranslationUnit cxtup) {
     if ((nodeToTest->node->modified == 1) && (strcmp(nodeToTest->node->newContent, &"\nend") == 0)) {
         counter++:
     }
-    depth--;
-    depth--;
+    depth2--;
+    depth2--;
 }

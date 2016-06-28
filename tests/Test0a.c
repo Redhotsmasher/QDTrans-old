@@ -2,8 +2,6 @@
 
 int counter = 0;
 
-int depth = 0;
-
 int main(int argc, char *argv[]) {
     filename = "./tests/testfiles/Test0.c";
     tree = generateTree(filename);
@@ -19,7 +17,6 @@ int main(int argc, char *argv[]) {
     if (tree->root->modified != 2) {
         counter = 1;
     }
-    traverseTree(tree->root, tree->cxtup);
     //printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", tree->error, tree->nodes, tree->unmodifiedDepth);
     //printf("Final max depth: %i\n", moddepth);
     //freeCrits(crits);
