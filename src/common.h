@@ -1,6 +1,6 @@
 #ifndef QDTRANS_COMMON
 #define QDTRANS_COMMON
-#include <clang-c/Index.h>
+#include "clang-c/Index.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
