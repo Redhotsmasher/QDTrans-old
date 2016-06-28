@@ -15,8 +15,8 @@
 #ifndef LLVM_CLANG_C_CXCOMPILATIONDATABASE_H
 #define LLVM_CLANG_C_CXCOMPILATIONDATABASE_H
 
-#include "clang-c/Platform.h"
-#include "clang-c/CXString.h"
+#include "Platform.h"
+#include "CXString.h"
 
 #ifdef __cplusplus
 extern "C" {

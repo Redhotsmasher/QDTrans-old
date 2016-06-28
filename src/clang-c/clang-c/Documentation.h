@@ -15,7 +15,7 @@
 #ifndef LLVM_CLANG_C_DOCUMENTATION_H
 #define LLVM_CLANG_C_DOCUMENTATION_H
 
-#include "clang-c/Index.h"
+#include "../Index.h"
 
 #ifdef __cplusplus
 extern "C" {
