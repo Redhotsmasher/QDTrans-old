@@ -81,10 +81,10 @@ clean:
 test0: test0a test0b test0c
 
 test0a: common.o printer.o qdtrans.o
-	$(CC) tests/test0a.c $(CFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0a
+	$(CC) tests/Test0a.c $(CFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0a
 
 test0b: common.o printer.o qdtrans.o
-	$(CC) tests/test0b.c $(CFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0b
+	$(CC) tests/Test0b.c $(CFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0b
 
 test0c: common.o printer.o qdtrans.o
-	$(CC) tests/test0c.c $(CFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0c
+	$(CC) tests/Test0c.c $(CFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0c
