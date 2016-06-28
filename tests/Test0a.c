@@ -1,4 +1,4 @@
-#include "qdtrans.h"
+#include "../src/qdtrans.h"
 
 int counter = 0;
 
