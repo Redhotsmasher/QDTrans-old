@@ -11,6 +11,11 @@ matrix:
           packages:
             - gcc-4.9
             - clang-3.6
+            - libclang-common-3.6-dev
+            - libclang-3.6-dev
+            - libclang1-3.6
+            - libclang1-3.6-dbg
+            - libllvm-3.6
       env: COMPILER=gcc-4.9
     - compiler: gcc
       addons:
@@ -21,6 +26,11 @@ matrix:
           packages:
             - gcc-5
             - clang-3.6
+            - libclang-common-3.6-dev
+            - libclang-3.6-dev
+            - libclang1-3.6
+            - libclang1-3.6-dbg
+            - libllvm-3.6
       env: COMPILER=gcc-5
     - compiler: clang
       addons:
@@ -30,6 +40,11 @@ matrix:
             - llvm-toolchain-precise-3.6
           packages:
             - clang-3.6
+            - libclang-common-3.6-dev
+            - libclang-3.6-dev
+            - libclang1-3.6
+            - libclang1-3.6-dbg
+            - libllvm-3.6
       env: COMPILER=clang-3.6
     - compiler: clang
       addons:
@@ -39,6 +54,11 @@ matrix:
             - llvm-toolchain-precise-3.7
           packages:
             - clang-3.7
+            - libclang-common-3.7-dev
+            - libclang-3.7-dev
+            - libclang1-3.7
+            - libclang1-3.7-dbg
+            - libllvm-3.7
       env: COMPILER=clang-3.7
 script:
   - ld --verbose
