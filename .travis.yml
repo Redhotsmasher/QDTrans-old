@@ -4,6 +4,7 @@ compiler:
   - clang
   - gcc
 script:
+  - ls /usr/local/clang-3.4/bin/
   - make test0
   - ./bin/test0a
   - ./bin/test0b
