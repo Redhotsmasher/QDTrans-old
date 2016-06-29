@@ -12,6 +12,12 @@ matrix:
             - gcc-4.9
 	    - clang-3.6
       env: COMPILER=gcc-4.9
+      script:
+        - make tests
+	- ./bin/test0a
+  	- ./bin/test0b
+  	- ./bin/test0c
+  	- make clean
     - compiler: gcc
       addons:
         apt:
@@ -22,6 +28,12 @@ matrix:
             - gcc-5
 	    - clang-3.6
       env: COMPILER=gcc-5
+      script:
+        - make tests
+	- ./bin/test0a
+  	- ./bin/test0b
+  	- ./bin/test0c
+  	- make clean
     - compiler: clang
       addons:
         apt:
@@ -31,6 +43,12 @@ matrix:
           packages:
             - clang-3.6
       env: COMPILER=clang-3.6
+      script:
+        - make tests
+	- ./bin/test0a
+  	- ./bin/test0b
+  	- ./bin/test0c
+  	- make clean
     - compiler: clang
       addons:
         apt:
@@ -40,9 +58,9 @@ matrix:
           packages:
             - clang-3.7
       env: COMPILER=clang-3.7
-script:
-  - make test0
-  - ./bin/test0a
-  - ./bin/test0b
-  - ./bin/test0c
-  - make clean
+      script:
+        - make tests
+	- ./bin/test0a
+  	- ./bin/test0b
+  	- ./bin/test0c
+  	- make clean
