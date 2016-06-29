@@ -2,7 +2,7 @@
 
 int counter = 0;
 
-struct criticalSection* crits = NULL;
+//struct criticalSection* crits = NULL;
 
 int main(int argc, char *argv[]) {
     filename = "./tests/testfiles/Test0.c";
@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     //printf("Snopp!\n");
     //depth = 0;
     //printTree(tree);
-    if (strcmp(crits->accessedvars->name, &"num" == 0) {
+    if (strcmp(crits->accessedvars->name, &"num") == 0) {
 	counter++;
     }
     //printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", tree->error, tree->nodes, tree->unmodifiedDepth);

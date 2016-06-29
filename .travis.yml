@@ -41,8 +41,6 @@ matrix:
             - clang-3.7
       env: COMPILER=clang-3.7
 script:
-  - cp /usr/local/clang-3.4/lib/libclang.so /usr/local/lib/
-  - cp /usr/local/clang-3.4/lib/libclang.so /usr/local/lib64/
   - ld --verbose
   - make tests
   - ./bin/test0a

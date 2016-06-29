@@ -46,13 +46,13 @@ int checkTree (struct treeNode* node, CXTranslationUnit cxtup) {
     depth2++;
     depth2++;
     struct treeListNode* childlist = node->children->node->children;
-    struct treeNode* nodeToTest = childlist->next->next;
+    struct treeListNode* nodeToTest = childlist->next->next;
     if ((nodeToTest->node->modified == 1) && (strcmp(nodeToTest->node->newContent, &"\nstart") == 0)) {
-        counter++:
+        counter++;
     }
     nodeToTest = nodeToTest->next->next->next;
     if ((nodeToTest->node->modified == 1) && (strcmp(nodeToTest->node->newContent, &"\nend") == 0)) {
-        counter++:
+        counter++;
     }
     depth2--;
     depth2--;
