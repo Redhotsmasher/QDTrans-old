@@ -7,33 +7,33 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-	    - llvm-toolchain-precise-3.6
+            - llvm-toolchain-precise-3.6
           packages:
             - gcc-4.9
-	    - clang-3.6
+            - clang-3.6
       env: COMPILER=gcc-4.9
       script:
         - make tests
-	- ./bin/test0a
-  	- ./bin/test0b
-  	- ./bin/test0c
-  	- make clean
+        - ./bin/test0a
+        - ./bin/test0b
+        - ./bin/test0c
+        - make clean
     - compiler: gcc
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-	    - llvm-toolchain-precise-3.6
+            - llvm-toolchain-precise-3.6
           packages:
             - gcc-5
-	    - clang-3.6
+            - clang-3.6
       env: COMPILER=gcc-5
       script:
         - make tests
-	- ./bin/test0a
-  	- ./bin/test0b
-  	- ./bin/test0c
-  	- make clean
+        - ./bin/test0a
+        - ./bin/test0b
+        - ./bin/test0c
+        - make clean
     - compiler: clang
       addons:
         apt:
@@ -45,10 +45,10 @@ matrix:
       env: COMPILER=clang-3.6
       script:
         - make tests
-	- ./bin/test0a
-  	- ./bin/test0b
-  	- ./bin/test0c
-  	- make clean
+        - ./bin/test0a
+        - ./bin/test0b
+        - ./bin/test0c
+        - make clean
     - compiler: clang
       addons:
         apt:
@@ -60,7 +60,7 @@ matrix:
       env: COMPILER=clang-3.7
       script:
         - make tests
-	- ./bin/test0a
-  	- ./bin/test0b
-  	- ./bin/test0c
-  	- make clean
+        - ./bin/test0a
+        - ./bin/test0b
+        - ./bin/test0c
+        - make clean
