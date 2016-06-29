@@ -1,10 +1,46 @@
 language: c
 install: true
-compiler:
-  - clang
-  - gcc
+matrix:
+  include:
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+	    - llvm-toolchain-precise-3.6
+          packages:
+            - gcc-4.9
+	    - clang-3.6
+      env: COMPILER=gcc-4.9
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+	    - llvm-toolchain-precise-3.6
+          packages:
+            - gcc-5
+	    - clang-3.6
+      env: COMPILER=gcc-5
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.6
+          packages:
+            - clang-3.6
+      env: COMPILER=clang-3.6
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.7
+          packages:
+            - clang-3.7
+      env: COMPILER=clang-3.7
 script:
-  - ls /usr/local/clang-3.4/bin/
   - make test0
   - ./bin/test0a
   - ./bin/test0b
