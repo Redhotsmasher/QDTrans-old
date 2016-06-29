@@ -12,6 +12,14 @@ matrix:
             - gcc-4.9
             - clang-3.6
       env: COMPILER=gcc-4.9
+      script:
+        - find -name libclang.so
+        - ld --verbose
+        - make tests
+        - ./bin/test0a
+        - ./bin/test0b
+        - ./bin/test0c
+        - make clean
     - compiler: gcc
       addons:
         apt:
@@ -22,6 +30,14 @@ matrix:
             - gcc-5
             - clang-3.6
       env: COMPILER=gcc-5
+      script:
+        - find -name libclang.so
+        - ld --verbose
+        - make tests
+        - ./bin/test0a
+        - ./bin/test0b
+        - ./bin/test0c
+        - make clean
     - compiler: clang
       addons:
         apt:
@@ -31,6 +47,14 @@ matrix:
           packages:
             - clang-3.6
       env: COMPILER=clang-3.6
+      script:
+        - find -name libclang.so
+        - ld --verbose
+        - make tests
+        - ./bin/test0a
+        - ./bin/test0b
+        - ./bin/test0c
+        - make clean
     - compiler: clang
       addons:
         apt:
@@ -40,11 +64,11 @@ matrix:
           packages:
             - clang-3.7
       env: COMPILER=clang-3.7
-script:
-  - find -name libclang.so
-  - ld --verbose
-  - make tests
-  - ./bin/test0a
-  - ./bin/test0b
-  - ./bin/test0c
-  - make clean
+      script:
+        - find -name libclang.so
+        - ld --verbose
+        - make tests
+        - ./bin/test0a
+        - ./bin/test0b
+        - ./bin/test0c
+        - make clean
