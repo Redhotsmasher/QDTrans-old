@@ -16,7 +16,9 @@ int main(int argc, char *argv[]) {
     //printf("Snopp!\n");
     //depth = 0;
     //printTree(tree);
-    if (strcmp(crits->accessedvars->name, &"num") == 0) {
+    if(crits->accessedvars == NULL) {
+        printf("crits->accessedvars == NULL. This is bad.\n");
+    } else if(strcmp(crits->accessedvars->name, &"num") == 0) {
 	counter++;
     }
     //printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", tree->error, tree->nodes, tree->unmodifiedDepth);
