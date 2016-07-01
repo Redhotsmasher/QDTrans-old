@@ -61,8 +61,6 @@ matrix:
             - libllvm-3.7
       env: COMPILER=clang-3.7
 script:
-  - cd /
-  - find -name "libclang.so"
   - ld --verbose
   - make tests
   - ./bin/test0a
