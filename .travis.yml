@@ -61,7 +61,7 @@ matrix:
             - libllvm-3.7
       env:
         - COMPILER=clang-3.7
-        - LCLANG=-Xlinker --library-path=/usr/lib/llvm-3.7/lib/ -lclang
+        - LCLANG=-lclang
 script:
   - ld --verbose
   - make tests
