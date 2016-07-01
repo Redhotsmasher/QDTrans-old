@@ -141,6 +141,9 @@ void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNod
     //printf("child->startcol = %i\n", child->startcol);
 }
 
+/*
+ * Only works for unmodified nodes and modified nodes, not nodes which have modified children!
+ */
 void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNode* before, CXTranslationUnit cxtup) {
     node->childCount++;
     struct treeListNode* currnode = node->children;
@@ -163,6 +166,7 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
 	    addModified(currnode2, child);
 	    while(currnode2->parent != NULL) {
 	        currnode2 = currnode2->parent;
+		//debugNode2(currnode2, cxtup);
 		currnode2->modified++;
 		addModified(currnode2, child);
 	    }
@@ -200,11 +204,12 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
 	    addModified(currnode2, child);
 	    while(currnode2->parent != NULL) {
 	        currnode2 = currnode2->parent;
+		//debugNode2(currnode2, cxtup);
 		currnode2->modified++;
 		addModified(currnode2, child);
 	    }
-	    currnode2->modified++;
-	    addModified(currnode2, child);
+	    /*currnode2->modified++;
+	      addModified(currnode2, child);*/
 	}
 	struct treeListNode* newnode = malloc(sizeof(struct treeListNode));
 	newnode->node = child;
