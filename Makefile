@@ -1,5 +1,7 @@
+COMPILER=clang
 CC=$(COMPILER)
-CFLAGS=-std=c11 -lclang -I /usr/lib/llvm-3.6/include/
+LCLANG=-Xlinker --library-path=/usr/lib/llvm-3.6/lib/ -lclang
+CFLAGS=-std=c11 $(LCLANG)
 DFLAGS=-g -Wall -Wextra
 MDFLAGS=-fsanitize=address
 OPTLEV=3
