@@ -16,7 +16,7 @@ matrix:
             - libclang1-3.6
             - libclang1-3.6-dbg
             - libllvm-3.6
-      env: COMPILER=gcc-4.9
+      env: COMPILER=gcc-4.9 LCLANG="-Xlinker --library-path=/usr/lib/llvm-3.6/lib/ -lclang"
     - compiler: gcc
       addons:
         apt:
@@ -31,7 +31,7 @@ matrix:
             - libclang1-3.6
             - libclang1-3.6-dbg
             - libllvm-3.6
-      env: COMPILER=gcc-5
+      env: COMPILER=gcc-5 LCLANG="-Xlinker --library-path=/usr/lib/llvm-3.6/lib/ -lclang"
     - compiler: clang
       addons:
         apt:
@@ -45,7 +45,7 @@ matrix:
             - libclang1-3.6
             - libclang1-3.6-dbg
             - libllvm-3.6
-      env: COMPILER=clang-3.6
+      env: COMPILER=clang-3.6 LCLANG="-Xlinker --library-path=/usr/lib/llvm-3.6/lib/ -lclang"
     - compiler: clang
       addons:
         apt:
