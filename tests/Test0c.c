@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     scanTree(tree->root, tree->cxtup);
     findCrits(tree->root, tree->cxtup);
     scanCrits(tree->cxtup);
-    //debugCrits(crits, tree->cxtup);
+    debugCrits(crits, tree->cxtup);
     //refactorCrits(tree->root, tree->cxtup);
     //printf("Snopp!\n");
     //depth = 0;

@@ -272,9 +272,9 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 		smallestline = INT_MAX;
 		currnode = node->modifiedNodes;
 	    }
-	    for(int i = 0; i <= 1; i++) {
+	    /*for(int i = 0; i <= 1; i++) {
 	      //printf("nodenum: %i, nstartline: %i, nstartcol: %i\n", i, nodes[i]->startline, nodes[i]->startcol);
-	    }
+	      }*/
 	    CXSourceRange range = clang_getCursorExtent(node->cursor);
 	    CXToken* tokens;
 	    unsigned int numTokens;

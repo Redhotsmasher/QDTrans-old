@@ -343,11 +343,11 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
         bool isret = isreturn;
 	enum CXCursorKind cxck = clang_getCursorKind(node->cursor);
 	enum CXCursorKind cxck2;
-	if(node->parent != NULL && node->parent->parent != NULL) {
+	/*if(node->parent != NULL && node->parent->parent != NULL) {
 	    cxck2 = clang_getCursorKind(node->parent->parent->cursor);
 	} else {
 	    cxck2 = CXCursor_TranslationUnit; // Dummy value != CXCursor_MemberRefExpr
-	}
+	    }*/
 	if(cxck == CXCursor_ReturnStmt) {
 	    isret = true;
 	} if(cxck == CXCursor_DeclRefExpr) {

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <limits.h>
 
 struct treeListNode;
 
@@ -315,6 +316,7 @@ struct nodeTree* generateTree(char* filename) {
     currentnode = thetree;
     clang_visitChildren(cursor, visitor, NULL);
     ntree->nodes = 0;
+    ntree->unmodifiedDepth = INT_MIN;
     visitRecursive(thetree->children, ntree);
     //printf("Visits: %dx", visitcounter);
     //thecxtup = ntree->cxtup;
