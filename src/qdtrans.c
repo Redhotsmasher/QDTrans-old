@@ -338,6 +338,7 @@ void scanCrit(struct criticalSection* crit, CXTranslationUnit cxtup) {
 }
 
 void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTranslationUnit cxtup, bool isreturn) {
+  //printf("Scan!\n");
     depth++;
     if(node->validcursor == true) {
         bool isret = isreturn;
@@ -347,10 +348,10 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 	    cxck2 = clang_getCursorKind(node->parent->parent->cursor);
 	} else {
 	    cxck2 = CXCursor_TranslationUnit; // Dummy value != CXCursor_MemberRefExpr
-	    }*/
+	    }
 	if(cxck == CXCursor_ReturnStmt) {
 	    isret = true;
-	} if(cxck == CXCursor_DeclRefExpr) {
+	    }*/ if(cxck == CXCursor_DeclRefExpr) {
 	    if(first == false) {
       /*if(isret == true) {
 	    struct treeListNode* newstmt = malloc(sizeof(struct treeListNode));
@@ -448,14 +449,20 @@ void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 		newcrit->nodesafter = NULL;
 		bool inCrit = false;
 		bool first = true;
+		bool afterCrit = false;
 		struct treeListNode* list;
 		struct treeListNode* critlist;
-		struct treeListNode* beforeStart;
-		struct treeListNode* afterEnd;
+		//struct treeListNode* beforeStart;
+		//struct treeListNode* afterEnd;
 		while(currnode != NULL) {
-		  //printf("0|currnode: %lX\n", currnode);
+		  printf("0|currnode: %lX\n", currnode);
+		  if(currnode->node->newContent != NULL) {
+		      printf("currnode->node->newContent = %s\n", currnode->node->newContent);
+		  } else {
+		      printf("currnode->node->newContent = NULL\n");
+		  }
 		    if(currnode->node->newContent != NULL && (strcmp(currnode->node->newContent, "\nstart") == 0)) {
-		      //printf("1\n");
+		      printf("1\n");
 		        //newcrit->containingNode = currnode->node->parent;
 		        //lastnode->next = currnode->next;
 		        inCrit = true;
@@ -467,18 +474,19 @@ void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 			    newcrit->needsRefactoring = true;
 			}
 			newcrit->needsWait = false;
-			currnode = currnode->next;
-			newcrit->lockvarNode = currnode->node->children->next->node;
+			//currnode = currnode->next;
+			newcrit->lockvarNode = currnode->next->node->children->next->node;
 		    } else if(currnode->node->newContent != NULL && (strcmp(currnode->node->newContent, "\nend") == 0)) {
-		      //printf("2\n");
+		      printf("2\n");
 		        lastnode->next = currnode->next;
-		        currnode = currnode->next;
+		        //currnode = currnode->next;
 			//currnode = currnode->next;
 		        //printf("-----\n");
 		        inCrit = false;
-		    } else if(inCrit == true) {
-		      //printf("3\n");
-		      //debugNode(currnode->node, cxtup);
+			afterCrit = true;
+		    } else if(inCrit == true && afterCrit == false) {
+		      printf("3\n");
+		      debugNode(currnode->node, cxtup);
 		        if(newcrit->nodelist == NULL) {
 			    //printf("newcrit->nodelist: %lX\n", newcrit->nodelist);
 			    newcrit->nodelist = malloc(sizeof(struct treeListNode));
@@ -500,7 +508,7 @@ void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 			    critlist->next = NULL;
 			    //printf("newcrit->nodelist: %lX\n", newcrit->nodelist);
 			}
-		    } else {
+		    } else if(afterCrit == true) {
 		      printf("4\n");
 		      debugNode(currnode->node, cxtup);
 			newcrit->needsRefactoring = true;
@@ -528,7 +536,7 @@ void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 		    }
 		    lastnode = currnode;
 		    currnode = currnode->next;
-		  //printf("5\n");
+		    printf("5\n");
 		    first = false;
 		}
 		//printf("-----\n");

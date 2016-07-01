@@ -81,11 +81,11 @@ clean:
 
 test0: test0a test0b test0c
 
-test0a: common.o printer.o qdtrans.o
+test0a: debug_common.o debug_printer.o debug_qdtrans.o
 	$(CC) tests/Test0a.c -O$(DOPTLEV) $(CFLAGS) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0a
 
-test0b: common.o printer.o qdtrans.o
+test0b: debug_common.o debug_printer.o debug_qdtrans.o
 	$(CC) tests/Test0b.c -O$(DOPTLEV) $(CFLAGS) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0b
 
-test0c: common.o printer.o qdtrans.o
+test0c: debug_common.o debug_printer.o debug_qdtrans.o
 	$(CC) tests/Test0c.c -O$(DOPTLEV) $(CFLAGS) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0c
