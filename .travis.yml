@@ -59,9 +59,7 @@ matrix:
             - libclang1-3.7
             - libclang1-3.7-dbg
             - libllvm-3.7
-      env:
-        - COMPILER=clang-3.7
-        - LCLANG=-lclang
+      env: COMPILER=clang-3.7 LCLANG=-lclang
 script:
   - ld --verbose
   - make tests
