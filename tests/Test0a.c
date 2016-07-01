@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
     //printf("Snopp!\n");
     //depth = 0;
     //printTree(tree);
-    debugTree2(tree->root, tree->cxtup);
+    //debugTree2(tree->root, tree->cxtup);
     if (tree->root->modified != 2) {
         counter = 1;
     }
