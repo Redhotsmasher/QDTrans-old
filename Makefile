@@ -21,10 +21,10 @@ mdebug: mdebug_common.o mdebug_dumptree mdebug_printer.o mdebug_printtree mdebug
 
 
 dumptree: common.o
-	$(CC) src/dumptree.c -O$(OPTLEV) $(CFLAGS) bin/common.o -o bin/dumptree
+	$(CC) src/dumptree.c -O$(OPTLEV) bin/common.o $(CFLAGS) -o bin/dumptree
 
 printtree: common.o printer.o
-	$(CC) src/printtree.c -O$(OPTLEV) $(CFLAGS) bin/common.o bin/printer.o -o bin/printtree
+	$(CC) src/printtree.c -O$(OPTLEV) bin/common.o bin/printer.o $(CFLAGS) -o bin/printtree
 
 qdtrans.o: common.o printer.o
 	$(CC) -c src/qdtrans.c -O$(OPTLEV) $(CFLAGS) -o bin/qdtrans.o
@@ -36,13 +36,13 @@ common.o:
 	$(CC) -c src/common.c -O$(OPTLEV) $(CFLAGS) -o bin/common.o
 
 main: common.o printer.o qdtrans.o
-	$(CC) src/main.c -O$(OPTLEV) $(CFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/qdtrans
+	$(CC) src/main.c -O$(OPTLEV) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/qdtrans
 
 debug_dumptree: debug_common.o
-	$(CC) src/dumptree.c -O$(DOPTLEV) $(CFLAGS) $(DFLAGS) bin/common.o -o bin/dumptree
+	$(CC) src/dumptree.c -O$(DOPTLEV) $(DFLAGS) bin/common.o $(CFLAGS) -o bin/dumptree
 
 debug_printtree: debug_common.o debug_printer.o
-	$(CC) src/printtree.c -O$(DOPTLEV) $(CFLAGS) $(DFLAGS) bin/common.o bin/printer.o -o bin/printtree
+	$(CC) src/printtree.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o $(CFLAGS) -o bin/printtree
 
 debug_qdtrans.o: debug_common.o debug_printer.o
 	$(CC) -c src/qdtrans.c -O$(DOPTLEV) $(CFLAGS) $(DFLAGS) -o bin/qdtrans.o
@@ -54,13 +54,13 @@ debug_common.o:
 	$(CC) -c src/common.c -O$(DOPTLEV) $(CFLAGS) $(DFLAGS) -o bin/common.o
 
 debug_main: debug_common.o debug_printer.o debug_qdtrans.o
-	$(CC) src/main.c -O$(DOPTLEV) $(CFLAGS) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/qdtrans
+	$(CC) src/main.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/qdtrans
 
 mdebug_dumptree: debug_common.o
-	$(CC) src/dumptree.c -O$(OPTLEV) $(CFLAGS) $(DFLAGS) $(MDFLAGS) bin/common.o -o bin/dumptree
+	$(CC) src/dumptree.c -O$(OPTLEV) $(DFLAGS) $(MDFLAGS) bin/common.o $(CFLAGS) -o bin/dumptree
 
 mdebug_printtree: debug_common.o debug_printer.o
-	$(CC) src/printtree.c -O$(OPTLEV) $(CFLAGS) $(DFLAGS) $(MDFLAGS) bin/common.o bin/printer.o -o bin/printtree
+	$(CC) src/printtree.c -O$(OPTLEV) $(DFLAGS) $(MDFLAGS) bin/common.o bin/printer.o $(CFLAGS) -o bin/printtree
 
 mdebug_qdtrans.o: debug_common.o
 	$(CC) -c src/qdtrans.c -O$(OPTLEV) $(CFLAGS) $(DFLAGS) $(MDFLAGS) -o bin/qdtrans.o
@@ -72,7 +72,7 @@ mdebug_common.o:
 	$(CC) -c src/common.c -O$(OPTLEV) $(CFLAGS) $(DFLAGS) $(MDFLAGS) -o bin/common.o
 
 mdebug_main: mdebug_common.o mdebug_printer.o mdebug_qdtrans.o
-	$(CC) src/main.c -O$(OPTLEV) $(CFLAGS) $(DFLAGS) $(MDFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/qdtrans
+	$(CC) src/main.c -O$(OPTLEV) $(DFLAGS) $(MDFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/qdtrans
 
 clean:
 	rm -f bin/*
@@ -82,10 +82,10 @@ clean:
 test0: test0a test0b test0c
 
 test0a: debug_common.o debug_printer.o debug_qdtrans.o
-	$(CC) tests/Test0a.c -O$(DOPTLEV) $(CFLAGS) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0a
+	$(CC) tests/Test0a.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test0a
 
 test0b: debug_common.o debug_printer.o debug_qdtrans.o
-	$(CC) tests/Test0b.c -O$(DOPTLEV) $(CFLAGS) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0b
+	$(CC) tests/Test0b.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test0b
 
 test0c: debug_common.o debug_printer.o debug_qdtrans.o
-	$(CC) tests/Test0c.c -O$(DOPTLEV) $(CFLAGS) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o -o bin/test0c
+	$(CC) tests/Test0c.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test0c
