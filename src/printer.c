@@ -184,12 +184,12 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 			    }
 			}
 			char* tstr = clang_getCString(tokenstring);
-			if(i == 0 && *endline == prevline && *endcol == prevcol) {	    
+			//if(i == 0 && *endline == prevline && *endcol == prevcol) {	    
 			    // Do nothing, print nothing.
-			} else {
+			//} else {
 			    //printf("%u -> %i, %u -> %i\n", *endline, prevline, *endcol, prevcol);
 			    printf("%s", tstr);
-			}
+			    //}
 			prevline = *endline;
 			prevcol = *endcol;
 			clang_disposeString(tokenstring);
@@ -311,9 +311,9 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 		    }
 		}
 		char* tstr = clang_getCString(tokenstring);
-		if(i == 0 && endline == prevline && endcol == prevcol) {	    
+		//if(i == 0 && endline == prevline && endcol == prevcol) {	    
 		    // Do nothing, print nothing.
-		} else {
+		//} else {
 		    //printf("nextstartline: %i, startline: %i\n", nodes[nextnode]->startline, startline);
 		    //printf("%i < %i && (%i == %i) && (%i == %i)\n", nextnode, numNodes, nodes[nextnode]->startline, startline, nodes[nextnode]->startcol, startcol);
 		    if((nextnode < numNodes) && (nodes[nextnode]->startline == startline) && (nodes[nextnode]->startcol == startcol)) {
@@ -333,7 +333,7 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 			prevline = endline;
 			prevcol = endcol;
 		    }
-		}
+		    //}
 		//printf("%i\n", sizeof(nodes));
 		clang_disposeString(tokenstring);  
 	    }

@@ -22,6 +22,10 @@ SharedInt* sip;
 
 struct SharedInt2* sip2;
 
+struct SharedInt2* nob() {
+    //nob
+}
+
 void *functionWithCriticalSection(int* v2) {
     // Do some work
     pthread_mutex_lock(&(sip->lock));
@@ -36,15 +40,12 @@ void *functionWithCriticalSection(int* v2) {
     return poop + 7;
 }
 
-struct SharedInt2* nob() {
-    //nob
-}
-
 int main() {
     poop = 0;
     sem_init(&sem, 0, 0);
     SharedInt si;
     sip = &si;
+    printf("ASDFASDFASDF\n");
     sip->value = 0;
     sip2->value = 0;
     int v2 = 1;
