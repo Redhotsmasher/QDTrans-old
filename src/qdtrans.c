@@ -208,7 +208,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    }
 	    printf("%s\n", varstringafter);
 	    printf("\n}\n"); //"funend"
-	    /*currnode2->modified++;
+	    currnode2->modified++;
 	    addModified(currnode2, node);
 	    while(currnode2->parent != NULL) {
 	        currnode2 = currnode2->parent;
@@ -237,12 +237,12 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	        currnode = currnode->next;
 		drange = clang_getCursorExtent(currnode->node->cursor);
 		drstart = clang_getRangeStart(drange);
-		}
+	    }
 	    /*printf("\nASDFGHJKLÖÄ\n\n");
 	    debugNode(currnode->node, tree->cxtup);
 	    printf("\nQEWADSZX\n\n");
 	    debugNode(currnode->node->parent, tree->cxtup);*/
-	    /*struct treeNode* newNode = malloc(sizeof(struct treeNode));
+	    struct treeNode* newNode = malloc(sizeof(struct treeNode));
 	    newNode->childCount = 0;
 	    newNode->children = NULL;
 	    newNode->modified = 1;
