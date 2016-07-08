@@ -66,7 +66,7 @@ void addModified(struct treeNode* node, struct treeNode* modified) {
 	}
 	struct treeListNode* newnode = malloc(sizeof(struct treeListNode));
 	if(modified->modified == 0) {
-	    printf("Assertion failed: modified node has modified == 0!");
+	    printf("Assertion failed: modified node has modified == 0!\n");
 	}
 	newnode->node = modified;
 	newnode->next = NULL;
@@ -75,7 +75,7 @@ void addModified(struct treeNode* node, struct treeNode* modified) {
       //printf("currnode == NULL\n");
         struct treeListNode* newnode = malloc(sizeof(struct treeListNode));
 	if(modified->modified == 0) {
-	    printf("Assertion failed: modified node has modified == 0!");
+	    printf("Assertion failed: modified node has modified == 0!\n");
 	}
 	newnode->node = modified;
 	newnode->next = NULL;
@@ -372,12 +372,12 @@ int debugNode2(struct treeNode* node, CXTranslationUnit cxtup) {
         if(node->modified > 0) {
 	    printf("\n%i[\n", node->modified);
 	    struct treeListNode* modlist = node->modifiedNodes;
-	    while(modlist->next != NULL) {
+	    while(modlist != NULL) {
 	        printf("    %s\n", modlist->node->newContent);
 		modlist = modlist->next;
 	    }
-	    printf("    %s\n", modlist->node->newContent);
-	    printf("\n]\n");
+	    //printf("    %s\n", modlist->node->newContent);
+	    printf("]\n");
         }
         CXType type = clang_getCursorType(node->cursor);
 	CXString typestring = clang_getTypeSpelling(type);

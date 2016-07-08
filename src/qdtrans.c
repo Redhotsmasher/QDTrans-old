@@ -58,6 +58,8 @@ void debugTree3(struct treeNode* node, CXTranslationUnit cxtup);
 
 void debugNode(struct treeNode* node, CXTranslationUnit cxtup);
 
+void debugUnmodifiedNode(struct treeNode* node, CXTranslationUnit cxtup);
+
 void debugCrits(struct criticalSection* crits, CXTranslationUnit cxtup);
 
 void printCrit(struct criticalSection* crit, CXTranslationUnit cxtup);
@@ -188,6 +190,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	        sprintf(fcallstring2, "%s(%s", newfunname, currvar->name);
 		fcallstring2 += (1+strlen(newfunname)+strlen(currvar->name));
 	    }
+	    currvar = currvar->next;
 	    while(currvar != NULL) {
 	        if(currvar->threadLocal == true) {
 	            sprintf(fcallstring2, ", &%s", currvar->name);
@@ -198,15 +201,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 		}
 		currvar = currvar->next;
 	    }
-	    sprintf(fcallstring2, ");");
-	    struct treeNode* currnode2 = currcrit->nodelist->node->parent;
-	    while(clang_getCursorKind(currnode2->cursor) != CXCursor_FunctionDecl) {
-	        currnode2 = currnode2->parent;
-		}
-	    /*struct treeNode* currnode2 = currcrit->nodelist->node;
-	      currnode2->newContent = fcallstring;*/
-	    printf("origFunNode is:");
-	    debugNode(currnode2, cxtup);
+	    sprintf(fcallstring2, ");");	    
 	    printf("\n\n---\n\n");
 	    printf("%s\n", fcallstring);
 	    printf("\n\n---\n\n");
@@ -217,28 +212,35 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    }
 	    printf("%s\n", varstringafter);
 	    printf("\n}\n"); //"funend"
+	    struct treeNode* currnode2 = currcrit->nodelist->node;
+	    struct treeNode* locknode = currnode2;
+	    locknode->newContent = fcallstring;
+	    printf("locknode->newContent: %s\n", locknode->newContent);
 	    currnode2->modified++;
-	    addModified(currnode2, node);
+	    addModified(currnode2, locknode);
+	    printf("locknode->newContent: %s\n", locknode->newContent);
 	    while(currnode2->parent != NULL) {
 	        currnode2 = currnode2->parent;
 		currnode2->modified++;
-		addModified(currnode2, node);
-		}
+		addModified(currnode2, locknode);
+	    }
+	    printf("locknode->newContent: %s\n", locknode->newContent);
+	    printf("locknode is:");
+	    debugNode(currcrit->nodelist->node, cxtup);
 	    currnode = currcrit->nodelist->next;
 	    while(currnode != NULL) {
 	      //char* newchar = calloc(1, 1);
-	        char* newchar = malloc(7);
-	        strcpy(newchar, "Blarg.");
+	        char* newchar = malloc(2);
+	        strcpy(newchar, "|");
 		currnode->node->newContent = newchar;
 		currnode2 = currnode->node;
-		while(currnode2->parent != NULL) {
+		while(currnode2 != NULL) {
 		    currnode2->modified++;
 		    addModified(currnode2, currnode->node);
 		    currnode2 = currnode2->parent;
 		}
-		currnode->node->modified++;
 		currnode = currnode->next;
-	      }
+	    }
 	    currnode = tree->root->children;
 	    CXSourceRange drange = clang_getCursorExtent(node->cursor);
 	    CXSourceLocation drstart = clang_getRangeStart(drange);
@@ -493,7 +495,7 @@ void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 		      printf("currnode->node->newContent = NULL\n");
 		  }
 		    if(currnode->node->newContent != NULL && (strcmp(currnode->node->newContent, "\nstart") == 0)) {
-		      printf("1\n");
+		      //printf("1\n");
 		        //newcrit->containingNode = currnode->node->parent;
 		        //lastnode->next = currnode->next;
 		        inCrit = true;
@@ -508,7 +510,7 @@ void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 			//currnode = currnode->next;
 			newcrit->lockvarNode = currnode->next->node->children->next->node;
 		    } else if(currnode->node->newContent != NULL && (strcmp(currnode->node->newContent, "\nend") == 0)) {
-		      printf("2\n");
+		      //printf("2\n");
 		        lastnode->next = currnode->next;
 		        //currnode = currnode->next;
 			//currnode = currnode->next;
@@ -516,8 +518,8 @@ void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 		        inCrit = false;
 			afterCrit = true;
 		    } else if(inCrit == true && afterCrit == false) {
-		      printf("3\n");
-		      debugNode(currnode->node, cxtup);
+		      //printf("3\n");
+		      //debugNode(currnode->node, cxtup);
 		        if(newcrit->nodelist == NULL) {
 			    //printf("newcrit->nodelist: %lX\n", newcrit->nodelist);
 			    newcrit->nodelist = malloc(sizeof(struct treeListNode));
@@ -540,8 +542,8 @@ void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 			    //printf("newcrit->nodelist: %lX\n", newcrit->nodelist);
 			}
 		    } else if(afterCrit == true) {
-		      printf("4\n");
-		      debugNode(currnode->node, cxtup);
+		      //printf("4\n");
+		      //debugNode(currnode->node, cxtup);
 			newcrit->needsRefactoring = true;
 		        if(newcrit->nodesafter == NULL) {
 			  //printf("newcrit->nodesafter: %lX\n", newcrit->nodesafter);
@@ -567,7 +569,7 @@ void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 		    }
 		    lastnode = currnode;
 		    currnode = currnode->next;
-		    printf("5\n");
+		    //printf("5\n");
 		    first = false;
 		}
 		//printf("-----\n");
@@ -806,12 +808,12 @@ void debugTree2(struct treeNode* node, CXTranslationUnit cxtup) {
         if(node->modified > 0) {
 	    printf("\n%i@%i[\n", node->modified, depth);
 	    struct treeListNode* modlist = node->modifiedNodes;
-	    while(modlist->next != NULL) {
+	    while(modlist != NULL) {
 	        printf("    %s\n", modlist->node->newContent);
 		modlist = modlist->next;
 	    }
-	    printf("    %s\n", modlist->node->newContent);
-	    printf("\n]\n");
+	    //printf("    %s\n", modlist->node->newContent);
+	    printf("]\n");
         }
         CXType type = clang_getCursorType(node->cursor);
 	CXString typestring = clang_getTypeSpelling(type);
@@ -904,12 +906,12 @@ void debugTree3(struct treeNode* node, CXTranslationUnit cxtup) {
         if(node->modified > 0) {
 	    printf("\n%i@%i[\n", node->modified, depth);
 	    struct treeListNode* modlist = node->modifiedNodes;
-	    while(modlist->next != NULL) {
+	    while(modlist != NULL) {
 	        printf("    %s\n", modlist->node->newContent);
 		modlist = modlist->next;
 	    }
-	    printf("    %s\n", modlist->node->newContent);
-	    printf("\n]\n");
+	    //printf("    %s\n", modlist->node->newContent);
+	    printf("]\n");
         }
         CXType type = clang_getCursorType(node->cursor);
 	CXString typestring = clang_getTypeSpelling(type);
@@ -996,13 +998,83 @@ void debugNode(struct treeNode* node, CXTranslationUnit cxtup) {
         if(node->modified > 0) {
 	    printf("\n%i[\n", node->modified);
 	    struct treeListNode* modlist = node->modifiedNodes;
-	    while(modlist->next != NULL) {
+	    /*printf("modlist: %i\n", modlist);
+	    printf("modnode: %i\n", modlist->node);
+	    debugUnmodifiedNode(modlist->node, cxtup);*/
+	    while(modlist != NULL) {
 	        printf("    %s\n", modlist->node->newContent);
 		modlist = modlist->next;
 	    }
-	    printf("    %s\n", modlist->node->newContent);
-	    printf("\n]\n");
+	    //printf("    %s\n", modlist->node->newContent);
+	    printf("]\n");
         }
+        CXType type = clang_getCursorType(node->cursor);
+	CXString typestring = clang_getTypeSpelling(type);
+	CXString cdisplaystring = clang_getCursorDisplayName(node->cursor);
+	CXString cspellstring = clang_getCursorSpelling(node->cursor);
+	unsigned* curlines = malloc(sizeof(unsigned));
+	unsigned* curlinee = malloc(sizeof(unsigned));
+	unsigned* curcols = malloc(sizeof(unsigned));
+	unsigned* curcole = malloc(sizeof(unsigned));
+	CXSourceRange range = clang_getCursorExtent(node->cursor);
+	CXSourceLocation rstart = clang_getRangeStart(range);
+	CXSourceLocation rend = clang_getRangeEnd(range);
+	clang_getFileLocation (rstart, NULL, curlines, curcols, NULL);
+	clang_getFileLocation (rend, NULL, curlinee, curcole, NULL);
+	enum CXCursorKind cursorkind = clang_getCursorKind(node->cursor);
+	char* str2 = clang_getCString(typestring);
+	char* str3 = clang_getCString(cdisplaystring);
+	char* str4 = clang_getCString(cspellstring);
+	//if(clang_Location_isFromMainFile(rstart) != 0) {
+            printf("%i, [%i]:%s \"%s\"; %s (L%u:C%u-L%u:C%u), containing ", node->modified, cursorkind, str2, str3, str4, *curlines, *curcols, *curlinee, *curcole);
+	    CXToken* tokens;
+	    unsigned int numTokens;
+	    clang_tokenize(cxtup, range, &tokens, &numTokens);
+	    printf("%u tokens (", numTokens);
+	    for(int i = 0; i<numTokens; i++) {
+	        CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
+	        printf("%s ", clang_getCString(tokenstring));
+		clang_disposeString(tokenstring);
+	    }
+	    clang_disposeTokens(cxtup, tokens, numTokens);
+	    printf(")");
+            printf("\n");
+	    CXCursor cursor = clang_getCursorDefinition(node->cursor);
+	    range = clang_getCursorExtent(cursor);
+	    clang_tokenize(cxtup, range, &tokens, &numTokens);
+	    printf("Definiton cursor contains %u tokens (", numTokens);
+	    for(int i = 0; i<numTokens; i++) {
+	        CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
+	        printf("%s ", clang_getCString(tokenstring));
+		clang_disposeString(tokenstring);
+	    }
+	    clang_disposeTokens(cxtup, tokens, numTokens);
+	    printf(")");
+            printf("\n");
+	    //}
+	clang_disposeString(typestring);
+	clang_disposeString(cdisplaystring);
+	clang_disposeString(cspellstring);
+	free(curlines);
+	free(curlinee);
+	free(curcols);
+	free(curcole);
+    } else {
+        printf("Modded:\n");
+        tnodes++;
+        moddednodes++;
+        for(int i = 0; i < depth; i++) {
+	    printf("%s", space);
+	    //printf("%i", depth);
+	}
+	printf("%i, %s", node->modified, node->newContent);
+	printf("\n");
+    }
+}
+
+void debugUnmodifiedNode(struct treeNode* node, CXTranslationUnit cxtup) {
+    printf("Debugging treeNode: %012lX\n", node);
+    if(node->validcursor == true) {
         CXType type = clang_getCursorType(node->cursor);
 	CXString typestring = clang_getTypeSpelling(type);
 	CXString cdisplaystring = clang_getCursorDisplayName(node->cursor);
