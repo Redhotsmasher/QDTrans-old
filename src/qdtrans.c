@@ -164,32 +164,41 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    char* varstringafter = malloc(size);
 	    *varstringbefore = NULL;
 	    *varstringafter = NULL;
-	    currvar = currcrit->accessedvars->next;
+	    char* varstringbefore2 = varstringbefore;
+	    char* varstringafter2 = varstringafter;
+	    currvar = currcrit->accessedvars;
 	    while(currvar != NULL) {
-	        printf("%012lX\n", currvar);
-	        //sprintf(varstringbefore, "\n    %s %s = *__%s__;\n", currvar->typename, currvar->name, currvar->name);
-		sprintf(varstringbefore, "    %s %s = *__%s__;", currvar->typename, currvar->name, currvar->name);
-		//sprintf(varstringafter, "\n    *__%s__ = %s;\n", currvar->name, currvar->name);
-		sprintf(varstringafter, "    *__%s__ = %s;", currvar->name, currvar->name);
+	        if((currvar->threadLocal == true)) {
+		    printf("%012lX\n", currvar);
+		    sprintf(varstringbefore2, "    %s %s = *__%s__;", currvar->typename, currvar->name, currvar->name);
+		    varstringbefore2 += (16 + strlen(currvar->typename) + strlen(currvar->name));
+		    sprintf(varstringafter2, "    *__%s__ = %s;", currvar->name, currvar->name);
+		    varstringafter2 += (14 + 2*strlen(currvar->name));
+	        }
 		currvar = currvar->next;
 	    }
 	    currvar = currcrit->accessedvars;
 	    char* fcallstring = malloc(size2 + 12 + 5);
+	    char* fcallstring2 = fcallstring;
 	    *fcallstring = NULL;
 	    if(currvar->threadLocal == true) {
-	        sprintf(fcallstring, "%s(&%s", newfunname, currvar->name);
+	        sprintf(fcallstring2, "%s(&%s", newfunname, currvar->name);
+		fcallstring2 += (2+strlen(newfunname)+strlen(currvar->name));
 	    } else {
-	        sprintf(fcallstring, "%s(%s", newfunname, currvar->name);
+	        sprintf(fcallstring2, "%s(%s", newfunname, currvar->name);
+		fcallstring2 += (1+strlen(newfunname)+strlen(currvar->name));
 	    }
 	    while(currvar != NULL) {
 	        if(currvar->threadLocal == true) {
-	            sprintf(fcallstring, "%s(&%s", newfunname, currvar->name);
+	            sprintf(fcallstring2, ", &%s", currvar->name);
+		    fcallstring2 += (3+strlen(currvar->name));
 		} else {
-	            sprintf(fcallstring, "%s(%s", newfunname, currvar->name);
+	            sprintf(fcallstring2, ", %s", currvar->name);
+		    fcallstring2 += (2+strlen(currvar->name));
 		}
 		currvar = currvar->next;
 	    }
-	    sprintf(fcallstring, ");");
+	    sprintf(fcallstring2, ");");
 	    struct treeNode* currnode2 = currcrit->nodelist->node->parent;
 	    while(clang_getCursorKind(currnode2->cursor) != CXCursor_FunctionDecl) {
 	        currnode2 = currnode2->parent;
@@ -400,8 +409,21 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 		    } else {
 		        newvar->pointer = false;
 		    }
-		    newvar->threadLocal = ((strstr(newvar->typename, "_Thread_local") != NULL) || (strstr(newvar->typename, "thread_local")) != NULL || (strstr(newvar->typename, "__thread") != NULL) || (strstr(newvar->typename, "__declspec(thread)") != NULL));
-		    newvar->threadLocal = false;
+		    //newvar->threadLocal = false;
+		    CXSourceRange range = clang_getCursorExtent(clang_getCursorDefinition(node->cursor));
+		    CXToken* tokens;
+		    unsigned int numTokens;
+		    clang_tokenize(cxtup, range, &tokens, &numTokens);
+		    if(numTokens > 0) {
+		        CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[0]);
+			tstring = clang_getCString(tokenstring);
+			newvar->threadLocal = ((strstr(tstring, "_Thread_local") != NULL) || (strstr(tstring, "thread_local")) != NULL || (strstr(tstring, "__thread") != NULL) || (strstr(tstring, "__declspec(thread)") != NULL));
+			debugNode(node, cxtup);
+			clang_disposeString(tokenstring);
+			clang_disposeTokens(cxtup, tokens, numTokens);
+		    }
+		    //printf("%s\n", clang_Cursor_hasAttrs(node->cursor));
+		    printf("[%s %s]: pointer = %i, threadLocal = %i\n", newvar->typename, newvar->name, newvar->pointer, newvar->threadLocal);
 		    clang_disposeString(typestring);
 		    newvar->next = NULL;
 		    if(crit->accessedvars == NULL) {
@@ -1004,6 +1026,18 @@ void debugNode(struct treeNode* node, CXTranslationUnit cxtup) {
 	    unsigned int numTokens;
 	    clang_tokenize(cxtup, range, &tokens, &numTokens);
 	    printf("%u tokens (", numTokens);
+	    for(int i = 0; i<numTokens; i++) {
+	        CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
+	        printf("%s ", clang_getCString(tokenstring));
+		clang_disposeString(tokenstring);
+	    }
+	    clang_disposeTokens(cxtup, tokens, numTokens);
+	    printf(")");
+            printf("\n");
+	    CXCursor cursor = clang_getCursorDefinition(node->cursor);
+	    range = clang_getCursorExtent(cursor);
+	    clang_tokenize(cxtup, range, &tokens, &numTokens);
+	    printf("Definiton cursor contains %u tokens (", numTokens);
 	    for(int i = 0; i<numTokens; i++) {
 	        CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
 	        printf("%s ", clang_getCString(tokenstring));

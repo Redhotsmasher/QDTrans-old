@@ -293,7 +293,7 @@ struct nodeTree* generateTree(char* filename) {
     CXIndex cxix = clang_createIndex(1, 0);
     ntree->cxi = cxix;
     //printf("cxix: %lx, cxi: %lx\n", cxix, ntree->cxi);
-    unsigned flags = (CXTranslationUnit_DetailedPreprocessingRecord | CXTranslationUnit_Incomplete);
+    unsigned flags = (CXTranslationUnit_DetailedPreprocessingRecord /*| CXTranslationUnit_Incomplete*/);
     CXTranslationUnit cxtu = clang_createTranslationUnit(cxix, filename);
     ntree->cxtup = cxtu;
     ntree->cxi = cxix;
