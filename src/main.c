@@ -20,8 +20,8 @@ int main(int argc, char *argv[]) {
     //printf("Snopp!\n");
     //depth = 0;
     printf("\n\n---\n\n");
-    //printTree(tree);
-    debugTree2(tree->root, tree->cxtup);
+    printTree(tree);
+    //debugTree2(tree->root, tree->cxtup);
     printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", tree->error, tree->nodes, tree->unmodifiedDepth);
     printf("Final max depth: %i\n", moddepth);
     freeCrits(crits);

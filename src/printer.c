@@ -327,6 +327,17 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 			    printf("%s", nodes[nextnode]->newContent);
 			    prevline = endline;
 			    prevcol = endcol;
+			    CXSourceRange modrange = clang_getCursorExtent(nodes[nextnode]->cursor);
+			    CXSourceLocation modend = clang_getRangeEnd(modrange);
+			    int lastline;
+			    int lastcol;
+			    clang_getFileLocation(modend, NULL, &lastline, &lastcol, NULL);
+			    while(prevcol < lastcol || prevline < lastline) {
+			        i++;
+			        CXSourceRange trange = clang_getTokenExtent(cxtup, tokens[i]);
+				CXSourceLocation tend = clang_getRangeEnd(trange);
+				clang_getFileLocation(modend, NULL, &prevline, &prevcol, NULL);
+			    }
 			    nextnode++;
 			}
 		    } else {
