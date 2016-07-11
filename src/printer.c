@@ -11,6 +11,8 @@
 int prevline;
 int prevcol;
 
+bool prevmodded = false;
+
 int nodenum = 0;
 
 char* printNode(struct treeNode* node, CXTranslationUnit cxtup) {
@@ -170,17 +172,22 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 			    //printf("L%u-%u, C%u-%u", *startline, prevline, *startcol, prevcol);
 			    int startl = *startline;
 			    int startc = *startcol;
-			    for(int i = 0; i < startl-prevline; i++) {
-			        printf("\n");
-				//printf("*startline-prevline = %u, i = %u, prevline = %u\n", start-prevline, i, prevline);
-			    }
-			    if(startc-prevcol >= 0) {
-			        for(int i = 0; i < startc-prevcol; i++) {
-				    printf(" ");
-				}
+			    if(prevmodded == true) {
+			        prevmodded = false;
 			    } else {
-			        for(int i = 1; i < startc; i++) {
-				    printf(" ");
+			        for(int i = 0; i < startl-prevline; i++) {
+
+			        printf("\n");
+				    //printf("*startline-prevline = %u, i = %u, prevline = %u\n", start-prevline, i, prevline);
+				}
+				if(startc-prevcol >= 0) {
+				    for(int i = 0; i < startc-prevcol; i++) {
+				        printf(" ");
+				    }
+				} else {
+				    for(int i = 1; i < startc; i++) {
+				        printf(" ");
+				    }
 				}
 			    }
 			}
@@ -297,22 +304,27 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 		    //printf("L%u-%u, C%u-%u", *startline, prevline, *startcol, prevcol);
 		    int startl = startline;
 		    int startc = startcol;
-		    for(int i = 0; i < startl-prevline; i++) {
-		        printf("\n");
-		        //printf("*startline-prevline = %u, i = %u, prevline = %u\n", start-prevline, i, prevline);
-		    }
-		    if(startc-prevcol >= 0) {
-		        for(int i = 0; i < startc-prevcol; i++) {
-			    printf(" ");
-		        }
+		    if(prevmodded == true) {
+		        prevmodded = false;
 		    } else {
-		        for(int i = 0; i < startc; i++) {
-			printf(" ");
+		        for(int i = 0; i < startl-prevline; i++) {
+			    printf("\n");
+			    //printf("*startline-prevline = %u, i = %u, prevline = %u\n", start-prevline, i, prevline);
+			}
+			if(startc-prevcol >= 0) {
+			    for(int i = 0; i < startc-prevcol; i++) {
+			      printf(" ");
+			    }
+			} else {
+			    for(int i = 0; i < startc; i++) {
+			        printf(" ");
+			    }
 			}
 		    }
 		}
 		char* tstr = clang_getCString(tokenstring);
-		if(i == 0 && endline == prevline && endcol == prevcol) {	    
+		//printf("%i == %i, %i == %i\n", endline, prevline, endcol, prevcol);
+		if(/*i == 0 &&*/ endline == prevline && endcol == prevcol) {	    
 		    // Do nothing, print nothing.
 		} else {
 		    //printf("nextstartline: %i, startline: %i\n", nodes[nextnode]->startline, startline);
@@ -324,7 +336,11 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 			    nextnode++;
 			    i--;
 			} else {
-			    printf("%s", nodes[nextnode]->newContent);
+			  //printf("%i\n", i);
+			    char* nodenewcontent = nodes[nextnode]->newContent;
+			    if(strcmp(nodenewcontent, "")) {
+			        printf("%s\n    ", nodenewcontent); // Not perfect but good enough.
+			    }
 			    prevline = endline;
 			    prevcol = endcol;
 			    CXSourceRange modrange = clang_getCursorExtent(nodes[nextnode]->cursor);
@@ -333,12 +349,18 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 			    int lastcol;
 			    clang_getFileLocation(modend, NULL, &lastline, &lastcol, NULL);
 			    while(prevcol < lastcol || prevline < lastline) {
+			      //printf("%i < %i || %i < %i\n", prevcol, lastcol, prevline, lastline);
 			        i++;
 			        CXSourceRange trange = clang_getTokenExtent(cxtup, tokens[i]);
 				CXSourceLocation tend = clang_getRangeEnd(trange);
-				clang_getFileLocation(modend, NULL, &prevline, &prevcol, NULL);
+				clang_getFileLocation(tend, NULL, &prevline, &prevcol, NULL);
+				prevcol--; // Fix for duplication issue.
 			    }
+			    //printf("%i < %i || %i < %i\n", prevcol, lastcol, prevline, lastline);
+			    
 			    nextnode++;
+			    //printf("%i\n", i);
+			    prevmodded = true;
 			}
 		    } else {
 		        printf("%s", tstr);

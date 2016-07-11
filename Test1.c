@@ -31,11 +31,11 @@ void *functionWithCriticalSection(int* v2) {
     pthread_mutex_lock(&(sip->lock));
     sip->value = sip->value + *v2;
     poop = 1;
+    nob();
     sip2->value = sip2->value + 1;
     pthread_mutex_unlock(&(sip->lock));
     // Do some more work
     sem_post(&sem);
-    nob();
     //return poop + sip->value;
     return poop + 7;
 }

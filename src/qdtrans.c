@@ -87,15 +87,16 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    //Critical section is already in a function of its own, no need to refactor.
         } else {
 	    //Critical section is not in a function of its own and therefore needs to be factored out.
-	    struct treeListNode* currnode = currcrit->nodelist->next;
+	    struct treeListNode* currnode = currcrit->nodelist;
 	    int nodeCount = 0;
 	    while(currnode != NULL) {
 	        nodeCount++;
 		currnode = currnode->next;
 	    }
+	    nodeCount++; // For unlock node, technically part of "nodesafter".
 	    char* nodestrings[nodeCount];
-	    currnode = currcrit->nodelist->next;
-	    for(int i = 0; i < nodeCount; i++) {
+	    currnode = currcrit->nodelist;
+	    for(int i = 0; i < (nodeCount-1); i++) {
 	      /*char* asdf = "asdf\n";
 		nodestrings[i] = asdf;
 		printf("sadf\n");
@@ -115,12 +116,13 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 		//printf("S%i|%s\n", i, nodestrings[i]);
 	        currnode = currnode->next;
 	    }
+	    nodestrings[nodeCount-1] = printNode(currcrit->nodesafter->node, cxtup);
 	    struct variable* currvar = currcrit->accessedvars;
 	    int numvars = 0;
 	    int size = 3;
 	    while(currvar != NULL) {
 	        numvars++;
-	        size = size + strlen(currvar->name) + strlen(currvar->typename) + 3;
+	        size = size + strlen(currvar->name) + strlen(currvar->typename) + 7;
 		currvar = currvar->next;
 	    }
 	    int size2 = size;
@@ -141,7 +143,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	        strcat(fheaderstring, ", ");
 		strcat(fheaderstring, currvar->typename);
 	        if(currvar->threadLocal == true) {
-		    strcat(fheaderstring, "* ");
+		    strcat(fheaderstring, " * ");
 		    strcat(fheaderstring, "__");
 		    strcat(fheaderstring, currvar->name);
 		    strcat(fheaderstring, "__");
@@ -230,8 +232,8 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    currnode = currcrit->nodelist->next;
 	    while(currnode != NULL) {
 	      //char* newchar = calloc(1, 1);
-	        char* newchar = malloc(2);
-	        strcpy(newchar, "|");
+	        char* newchar = malloc(1);
+	        strcpy(newchar, "");
 		currnode->node->newContent = newchar;
 		currnode2 = currnode->node;
 		while(currnode2 != NULL) {
@@ -240,6 +242,16 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 		    currnode2 = currnode2->parent;
 		}
 		currnode = currnode->next;
+	    }
+	    currnode = currcrit->nodesafter;
+	    char* newchar = malloc(1);
+	    strcpy(newchar, "");
+	    currnode->node->newContent = newchar;
+	    currnode2 = currnode->node;
+	    while(currnode2 != NULL) {
+	        currnode2->modified++;
+	        addModified(currnode2, currnode->node);
+	        currnode2 = currnode2->parent;
 	    }
 	    currnode = tree->root->children;
 	    CXSourceRange drange = clang_getCursorExtent(node->cursor);
@@ -364,15 +376,20 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
         bool isret = isreturn;
 	enum CXCursorKind cxck = clang_getCursorKind(node->cursor);
 	enum CXCursorKind cxck2;
-	/*if(node->parent != NULL && node->parent->parent != NULL) {
+	if(node->parent != NULL && node->parent->parent != NULL) {
 	    cxck2 = clang_getCursorKind(node->parent->parent->cursor);
 	} else {
-	    cxck2 = CXCursor_TranslationUnit; // Dummy value != CXCursor_MemberRefExpr
-	    }
-	if(cxck == CXCursor_ReturnStmt) {
+	    cxck2 = CXCursor_TranslationUnit; // Dummy value != CXCursor_CallExpr
+	}
+	printf("cxck = %i, cxck2 = %i\n", cxck, cxck2);
+	/*if(cxck == CXCursor_ReturnStmt) {
 	    isret = true;
 	    }*/ if(cxck == CXCursor_DeclRefExpr) {
-	    if(first == false) {
+	  printf("1\n");
+	    if(cxck2 != CXCursor_CallExpr) {
+	        printf("2\n");
+	        if(first == false) {
+		    printf("3\n");
       /*if(isret == true) {
 	    struct treeListNode* newstmt = malloc(sizeof(struct treeListNode));
 	    newstmt->next = NULL;
@@ -387,60 +404,61 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 		currstmt->next = newstmt;
 	    }
 	    } else {*/
-		CXString cdisplaystring = clang_getCursorDisplayName(node->cursor);
-		char* namestring = clang_getCString(cdisplaystring);
-		struct variable* currvar = crit->accessedvars;
-		bool isDuplicate = false;
-		while(currvar != NULL) {
-		    isDuplicate = (isDuplicate || (strcmp(namestring, currvar->name) == NULL));
-		    currvar = currvar->next;
-		}
-		if(isDuplicate == false) {
-		    struct variable* newvar = malloc(sizeof(struct variable));
-		    newvar->name = malloc(strlen(namestring) + 1);
-		    strcpy(newvar->name, namestring);
-		    CXType type = clang_getCursorType(node->cursor);
-		    CXString typestring = clang_getTypeSpelling(type);
-		    char* tstring = clang_getCString(typestring);
-		    //printf("Type might be %s?\n", tstring);
-		    newvar->typename = malloc(strlen(tstring) + 1);
-		    strcpy(newvar->typename, tstring);
-		    char* isptr = (strchr(tstring, '*'));
-		    if(isptr != NULL) {
-		        newvar->pointer = true;
-		    } else {
-		        newvar->pointer = false;
+		    CXString cdisplaystring = clang_getCursorDisplayName(node->cursor);
+		    char* namestring = clang_getCString(cdisplaystring);
+		    struct variable* currvar = crit->accessedvars;
+		    bool isDuplicate = false;
+		    while(currvar != NULL) {
+		        isDuplicate = (isDuplicate || (strcmp(namestring, currvar->name) == NULL));
+			currvar = currvar->next;
 		    }
-		    //newvar->threadLocal = false;
-		    CXSourceRange range = clang_getCursorExtent(clang_getCursorDefinition(node->cursor));
-		    CXToken* tokens;
-		    unsigned int numTokens;
-		    clang_tokenize(cxtup, range, &tokens, &numTokens);
-		    if(numTokens > 0) {
-		        CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[0]);
-			tstring = clang_getCString(tokenstring);
-			newvar->threadLocal = ((strstr(tstring, "_Thread_local") != NULL) || (strstr(tstring, "thread_local")) != NULL || (strstr(tstring, "__thread") != NULL) || (strstr(tstring, "__declspec(thread)") != NULL));
-			debugNode(node, cxtup);
-			clang_disposeString(tokenstring);
-			clang_disposeTokens(cxtup, tokens, numTokens);
-		    }
-		    //printf("%s\n", clang_Cursor_hasAttrs(node->cursor));
-		    printf("[%s %s]: pointer = %i, threadLocal = %i\n", newvar->typename, newvar->name, newvar->pointer, newvar->threadLocal);
-		    clang_disposeString(typestring);
-		    newvar->next = NULL;
-		    if(crit->accessedvars == NULL) {
-		        crit->accessedvars = newvar;
-		    } else {
-		        currvar = crit->accessedvars;
-			while(currvar->next != NULL) {
-			    currvar = currvar->next;
+		    if(isDuplicate == false) {
+		        struct variable* newvar = malloc(sizeof(struct variable));
+			newvar->name = malloc(strlen(namestring) + 1);
+			strcpy(newvar->name, namestring);
+			CXType type = clang_getCursorType(node->cursor);
+			CXString typestring = clang_getTypeSpelling(type);
+			char* tstring = clang_getCString(typestring);
+			//printf("Type might be %s?\n", tstring);
+			newvar->typename = malloc(strlen(tstring) + 1);
+			strcpy(newvar->typename, tstring);
+			char* isptr = (strchr(tstring, '*'));
+			if(isptr != NULL) {
+			    newvar->pointer = true;
+			} else {
+			    newvar->pointer = false;
 			}
-			currvar->next = newvar;
+			//newvar->threadLocal = false;
+			CXSourceRange range = clang_getCursorExtent(clang_getCursorDefinition(node->cursor));
+			CXToken* tokens;
+			unsigned int numTokens;
+			clang_tokenize(cxtup, range, &tokens, &numTokens);
+			if(numTokens > 0) {
+			    CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[0]);
+			    tstring = clang_getCString(tokenstring);
+			    newvar->threadLocal = ((strstr(tstring, "_Thread_local") != NULL) || (strstr(tstring, "thread_local")) != NULL || (strstr(tstring, "__thread") != NULL) || (strstr(tstring, "__declspec(thread)") != NULL));
+			    debugNode(node, cxtup);
+			    clang_disposeString(tokenstring);
+			    clang_disposeTokens(cxtup, tokens, numTokens);
+			}
+			//printf("%s\n", clang_Cursor_hasAttrs(node->cursor));
+			printf("[%s %s]: pointer = %i, threadLocal = %i\n", newvar->typename, newvar->name, newvar->pointer, newvar->threadLocal);
+			clang_disposeString(typestring);
+			newvar->next = NULL;
+			if(crit->accessedvars == NULL) {
+			    crit->accessedvars = newvar;
+			} else {
+			    currvar = crit->accessedvars;
+			    while(currvar->next != NULL) {
+			        currvar = currvar->next;
+			    }
+			    currvar->next = newvar;
+			}
 		    }
+		    clang_disposeString(cdisplaystring);
+		} else {
+		    first = false;
 		}
-		clang_disposeString(cdisplaystring);
-	    } else {
-	        first = false;
 	    }
 	}
 	if(node->children != NULL) {
@@ -468,6 +486,11 @@ void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
     if(node->modified > 0) {
         if(node->newContent != NULL) {
 	    if(strcmp(node->newContent, &("\nstart")) == 0) {
+	        struct treeNode* currnode2 = node;
+	        while(currnode2->parent != NULL) {
+		    currnode2->modifiedNodes = NULL;
+		    currnode2 = currnode2->parent;
+		}
 	        struct criticalSection* newcrit = malloc(sizeof(struct criticalSection));
 		//newcrit->returnstmts = NULL;
 		newcrit->accessedvars = NULL;
