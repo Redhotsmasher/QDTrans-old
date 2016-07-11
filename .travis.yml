@@ -60,7 +60,7 @@ matrix:
             - libclang1-3.7-dbg
             - libllvm-3.7
       env: COMPILER=clang-3.7 LCLANG=-lclang
-      - compiler: clang
+    - compiler: clang
       addons:
         apt:
           sources:
