@@ -2,7 +2,7 @@ CC=$(COMPILER)
 CFLAGS=-std=c11 $(LCLANG)
 DFLAGS=-g -Wall -Wextra
 MDFLAGS=-fsanitize=address
-OPTLEV=3
+OPTLEV=0
 DOPTLEV=0
 
 

@@ -388,7 +388,7 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 	  printf("1\n");
 	    if(cxck2 != CXCursor_CallExpr) {
 	        printf("2\n");
-	        if(first == false) {
+	        //if(first == false) {
 		    printf("3\n");
       /*if(isret == true) {
 	    struct treeListNode* newstmt = malloc(sizeof(struct treeListNode));
@@ -456,9 +456,9 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 			}
 		    }
 		    clang_disposeString(cdisplaystring);
-		} else {
+		    /*} else {
 		    first = false;
-		}
+		    }*/
 	    }
 	}
 	if(node->children != NULL) {
