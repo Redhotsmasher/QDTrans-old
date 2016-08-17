@@ -12,7 +12,7 @@ struct variable {
     bool pointer;
     bool threadLocal;
     bool global;
-    bool needswait;
+    bool needsreturn;
   //struct treeNode* decl;
     struct variable* next;
 };
@@ -179,7 +179,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    currvar = currcrit->accessedvars;
 	    int pos = 0;
 	    while(currvar != NULL) {
-	        if((currvar->pointer == true)) {
+	        if(currvar->needsreturn == true || (currvar->threadLocal == true && currvar->pointer == true)) {
 		  //printf("%012lX (\"%s\")\n---\n", currvar, currvar->name);
 		    sprintf(varstringbefore2, "    %s %s = *__%s__;\n", currvar->typename, currvar->name, currvar->name);
 		    varstringbefore2 += (15 + strlen(currvar->typename) + 2*strlen(currvar->name));
