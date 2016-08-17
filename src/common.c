@@ -158,7 +158,7 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
     printf("%i\n", ncursorkind);
     debugNode2(currnode->next->node, cxtup);*/
     if(clang_equalCursors(currnode->node->cursor, before->cursor) == 1) {
-        printf("addingToFirst\n");
+      //printf("addingToFirst\n");
 	if(child->modified != 0) {
 	    child->modified++;
 	    node->modified++;

@@ -10,9 +10,9 @@ int main(int argc, char *argv[]) {
     }
     tree = generateTree(filename);
     //printf("qdtranscxtup: %lx\n", tree->cxtup);
-    printf("crits: %012lX\n", crits);
+    //printf("crits: %012lX\n", crits);
     scanTree(tree->root, tree->cxtup);
-    printf("crits: %012lX\n", crits);
+    //printf("crits: %012lX\n", crits);
     findCrits(tree->root, tree->cxtup);
     scanCrits(tree->cxtup);
     debugCrits(crits, tree->cxtup);

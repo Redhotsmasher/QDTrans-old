@@ -11,6 +11,8 @@ struct variable {
     char* typename;
     bool pointer;
     bool threadLocal;
+    bool global;
+    bool needswait;
   //struct treeNode* decl;
     struct variable* next;
 };
@@ -66,11 +68,15 @@ void printCrit(struct criticalSection* crit, CXTranslationUnit cxtup);
 
 void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup);
 
+struct treeNode* findNode(struct treeNode* node, CXCursor cursor, CXTranslationUnit cxtup);
+
 void scanCrits(CXTranslationUnit cxtup);
 
 void scanCrit(struct criticalSection* crit, CXTranslationUnit cxtup);
 
 void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTranslationUnit cxtup, bool isreturn);
+
+
 
 void findCrits(struct treeNode* node, CXTranslationUnit cxtup);
 
@@ -171,21 +177,23 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    char* varstringbefore2 = varstringbefore;
 	    char* varstringafter2 = varstringafter;
 	    currvar = currcrit->accessedvars;
+	    int pos = 0;
 	    while(currvar != NULL) {
-	        if((currvar->threadLocal == true)) {
-		    printf("%012lX\n", currvar);
-		    sprintf(varstringbefore2, "    %s %s = *__%s__;", currvar->typename, currvar->name, currvar->name);
-		    varstringbefore2 += (16 + strlen(currvar->typename) + strlen(currvar->name));
-		    sprintf(varstringafter2, "    *__%s__ = %s;", currvar->name, currvar->name);
+	        if((currvar->pointer == true)) {
+		  //printf("%012lX (\"%s\")\n---\n", currvar, currvar->name);
+		    sprintf(varstringbefore2, "    %s %s = *__%s__;\n", currvar->typename, currvar->name, currvar->name);
+		    varstringbefore2 += (15 + strlen(currvar->typename) + 2*strlen(currvar->name));
+		    sprintf(varstringafter2, "    *__%s__ = %s;\n", currvar->name, currvar->name);
 		    varstringafter2 += (14 + 2*strlen(currvar->name));
 	        }
 		currvar = currvar->next;
 	    }
+	    printf("\n---\n%s\n---\n%s\n---\n", varstringbefore, varstringafter);
 	    currvar = currcrit->accessedvars;
 	    char* fcallstring = malloc(size2 + 12 + 5);
 	    char* fcallstring2 = fcallstring;
 	    *fcallstring = NULL;
-	    if(currvar->threadLocal == true) {
+	    if(currvar->pointer == true) {
 	        sprintf(fcallstring2, "%s(&%s", newfunname, currvar->name);
 		fcallstring2 += (2+strlen(newfunname)+strlen(currvar->name));
 	    } else {
@@ -194,7 +202,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    }
 	    currvar = currvar->next;
 	    while(currvar != NULL) {
-	        if(currvar->threadLocal == true) {
+	        if(currvar->pointer == true) {
 	            sprintf(fcallstring2, ", &%s", currvar->name);
 		    fcallstring2 += (3+strlen(currvar->name));
 		} else {
@@ -381,15 +389,15 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 	} else {
 	    cxck2 = CXCursor_TranslationUnit; // Dummy value != CXCursor_CallExpr
 	}
-	printf("cxck = %i, cxck2 = %i\n", cxck, cxck2);
+	//printf("cxck = %i, cxck2 = %i\n", cxck, cxck2);
 	/*if(cxck == CXCursor_ReturnStmt) {
 	    isret = true;
 	    }*/ if(cxck == CXCursor_DeclRefExpr) {
-	  printf("1\n");
+	  //printf("1\n");
 	    if(cxck2 != CXCursor_CallExpr) {
-	        printf("2\n");
+	      //printf("2\n");
 	        //if(first == false) {
-		    printf("3\n");
+	      //printf("3\n");
       /*if(isret == true) {
 	    struct treeListNode* newstmt = malloc(sizeof(struct treeListNode));
 	    newstmt->next = NULL;
@@ -429,7 +437,14 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 			    newvar->pointer = false;
 			}
 			//newvar->threadLocal = false;
-			CXSourceRange range = clang_getCursorExtent(clang_getCursorDefinition(node->cursor));
+			CXCursor refcursor = clang_getCursorReferenced(node->cursor);
+			struct treeNode* refnode = findNode(tree->root, refcursor, cxtup); 
+ 			if(clang_getCursorKind(refnode->parent->cursor) == CXCursor_TranslationUnit) {
+			    newvar->global = true; 
+			} else {
+			    newvar->global = false; 
+			}
+			CXSourceRange range = clang_getCursorExtent(refcursor);
 			CXToken* tokens;
 			unsigned int numTokens;
 			clang_tokenize(cxtup, range, &tokens, &numTokens);
@@ -441,8 +456,15 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 			    clang_disposeString(tokenstring);
 			    clang_disposeTokens(cxtup, tokens, numTokens);
 			}
+			printf("clang_Cursor_isNull(refcursor) == %i.\n", clang_Cursor_isNull(refcursor));
+			struct treeNode* defnode;
+			if(clang_Cursor_isNull(refcursor) == false) {
+			    defnode = findNode(tree->root, refcursor, cxtup);
+			    debugNode(refnode, cxtup);
+			    printf("refnode->parent's cxck is %i.\n", clang_getCursorKind(refnode->parent->cursor));
+			}
 			//printf("%s\n", clang_Cursor_hasAttrs(node->cursor));
-			printf("[%s %s]: pointer = %i, threadLocal = %i\n", newvar->typename, newvar->name, newvar->pointer, newvar->threadLocal);
+			printf("[p->p->cxck = %i][%s %s]: pointer = %i, threadLocal = %i, global = %i\n\n", cxck2, newvar->typename, newvar->name, newvar->pointer, newvar->threadLocal, newvar->global);
 			clang_disposeString(typestring);
 			newvar->next = NULL;
 			if(crit->accessedvars == NULL) {
@@ -480,6 +502,28 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
     depth--;
 }
 
+struct treeNode* findNode(struct treeNode* node, CXCursor cursor, CXTranslationUnit cxtup) {
+    depth++;
+    struct treeNode* retval = NULL;
+    if(node->validcursor == true) {
+        if(clang_equalCursors(cursor, node->cursor)) {
+	    return node;
+	}
+    }
+    if(node->children != NULL) {
+        struct treeListNode* childlist = node->children;
+	while(childlist != NULL) {
+	    retval = findNode(childlist->node, cursor, cxtup);
+	    if(retval != NULL) {
+	        return retval;
+	    }
+	    childlist = childlist->next;
+	}
+	//printf("upCritRecursive\n");
+    }
+    return NULL;
+}
+
 void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
     depth++;
     //debugNode(node, cxtup);
@@ -511,11 +555,11 @@ void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 		//struct treeListNode* beforeStart;
 		//struct treeListNode* afterEnd;
 		while(currnode != NULL) {
-		  printf("0|currnode: %lX\n", currnode);
+		  //printf("0|currnode: %lX\n", currnode);
 		  if(currnode->node->newContent != NULL) {
-		      printf("currnode->node->newContent = %s\n", currnode->node->newContent);
+		    //printf("currnode->node->newContent = %s\n", currnode->node->newContent);
 		  } else {
-		      printf("currnode->node->newContent = NULL\n");
+		    //printf("currnode->node->newContent = NULL\n");
 		  }
 		    if(currnode->node->newContent != NULL && (strcmp(currnode->node->newContent, "\nstart") == 0)) {
 		      //printf("1\n");
