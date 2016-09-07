@@ -139,6 +139,7 @@ void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNod
     clang_getFileLocation(rstart, NULL, &(child->startline), &(child->startcol), NULL);
     //printf("child->startline = %i\n", child->startline);
     //printf("child->startcol = %i\n", child->startcol);
+    child->startcol++;
 }
 
 /*
@@ -158,7 +159,7 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
     printf("%i\n", ncursorkind);
     debugNode2(currnode->next->node, cxtup);*/
     if(clang_equalCursors(currnode->node->cursor, before->cursor) == 1) {
-      //printf("addingToFirst\n");
+        printf("addingToFirst\n");
 	if(child->modified != 0) {
 	    child->modified++;
 	    node->modified++;
@@ -171,46 +172,6 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
 		addModified(currnode2, child);
 	    }
 	}
-        struct treeListNode* newnode = malloc(sizeof(struct treeListNode));
-	
-	newnode->node = child;
-	newnode->next = node->children;
-	node->children = newnode;
-	child->parent = node;
-	CXSourceRange range = clang_getCursorExtent(currnode->node->cursor);
-	CXSourceLocation rend = clang_getRangeStart(range);
-	clang_getFileLocation(rend, NULL, &(child->startline), &(child->startcol), NULL);
-	//printf("child->startline = %i\n", child->startline);
-	//printf("child->startcol = %i\n", child->startcol);
-	} else {
-        while(currnode != NULL && (clang_equalCursors(currnode->next->node->cursor, before->cursor) == 0)) {
-	  /*printf("---\n");
-	    enum CXCursorKind ccursorkind = clang_getCursorKind(currnode->node->cursor);
-	    enum CXCursorKind bcursorkind = clang_getCursorKind(before->cursor);
-	    enum CXCursorKind ncursorkind = clang_getCursorKind(currnode->next->node->cursor);
-	    printf("%i\n", ccursorkind);
-	    debugNode2(currnode->node, cxtup);
-	    printf("%i\n", bcursorkind);
- 	    debugNode2(before, cxtup);
-	    printf("%i\n", ncursorkind);
-	    debugNode2(currnode->next->node, cxtup);*/
-	    //printf("%li == %li?\n", currnode->node, before);
-	    currnode = currnode->next;
-	}
-	if(child->modified != 0) {
-	  //child->modified++;
-	    node->modified++;
-	    struct treeNode* currnode2 = node;
-	    addModified(currnode2, child);
-	    while(currnode2->parent != NULL) {
-	        currnode2 = currnode2->parent;
-		//debugNode2(currnode2, cxtup);
-		currnode2->modified++;
-		addModified(currnode2, child);
-	    }
-	    /*currnode2->modified++;
-	      addModified(currnode2, child);*/
-	}
 	struct treeListNode* newnode = malloc(sizeof(struct treeListNode));
 	newnode->node = child;
 	newnode->next = currnode->next;
@@ -220,11 +181,19 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
 	//debugNode2(newnode->next->node);
 	CXSourceLocation rend = clang_getRangeStart(range);
 	clang_getFileLocation(rend, NULL, &(child->startline), &(child->startcol), NULL);
-	unsigned sline;
-	unsigned scol;
-	clang_getFileLocation(rend, NULL, &sline, &scol, NULL);
+	child->startcol--;
+	//unsigned sline;
+	//unsigned scol;
+	//clang_getFileLocation(rend, NULL, &sline, &scol, NULL);
 	//printf("child->startline = %i, child->startcol = %i\n", child->startline, child->startcol);
 	//printf("sline = %i, scol = %i\n", sline, scol);
+    } else {
+      while(currnode->next != NULL && (clang_equalCursors(currnode->next->node->cursor, before->cursor) == 0)) {
+	    currnode = currnode->next;
+	}
+        debugNode2(currnode->node, cxtup);
+	debugNode2(currnode->next->node, cxtup);
+	addChildAfter(node, child, currnode->node);
     }
 }
 

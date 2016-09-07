@@ -87,6 +87,13 @@ void freeCrits(struct criticalSection* crit);
 void printQDUsage();
 
 void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
+    tree->root->modified = 0;
+	    /*while(tree->root->modifiedNodes != NULL) {
+	        struct treeListNode* nodetodelete = tree->root->modifiedNodes;
+		tree->root->modifiedNodes == tree->root->modifiedNodes->next;
+		free(nodetodelete);
+		}*/
+    tree->root->modifiedNodes = NULL;
     struct criticalSection* currcrit = crits;
     while(currcrit != NULL) {
         if((currcrit->needsRefactoring == false) && (currcrit->nodesafter == NULL)) {
@@ -100,7 +107,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 		currnode = currnode->next;
 	    }
 	    nodeCount++; // For unlock node, technically part of "nodesafter".
-	    char* nodestrings[nodeCount];
+	    char** nodestrings[nodeCount];
 	    currnode = currcrit->nodelist;
 	    for(int i = 0; i < (nodeCount-1); i++) {
 	      /*char* asdf = "asdf\n";
@@ -211,7 +218,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 		}
 		currvar = currvar->next;
 	    }
-	    sprintf(fcallstring2, ");");	    
+	    sprintf(fcallstring2, ");");
 	    printf("\n\n---\n\n");
 	    printf("%s\n", fcallstring);
 	    printf("\n\n---\n\n");
@@ -238,6 +245,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    printf("locknode is:");
 	    debugNode(currcrit->nodelist->node, cxtup);
 	    currnode = currcrit->nodelist->next;
+	    //debugNode(currnode->node, cxtup);
 	    while(currnode != NULL) {
 	      //char* newchar = calloc(1, 1);
 	        char* newchar = malloc(1);
@@ -705,13 +713,13 @@ void scanTree(struct treeNode* node, CXTranslationUnit cxtup) {
 		      //printf("--START--\n");
 		        newnode->newContent = malloc(7*sizeof(char));
 			strcpy(newnode->newContent, &"\nstart");
-			addChildBefore(node->parent, newnode, node, cxtup);
+			addChildAfter(node->parent, newnode, node/*, cxtup*/);
 			//dNode = newnode;
 		    } else {
 		      //printf("---END---\n");
 		        newnode->newContent = malloc(5*sizeof(char));
 			strcpy(newnode->newContent, &"\nend");
-			addChildBefore(node->parent, newnode, node, cxtup);
+			addChildBefore(node->parent, newnode, node, cxtup); 
 		    }
 		    //newnode->parent = node->parent;
 		}
@@ -1063,7 +1071,7 @@ void debugNode(struct treeNode* node, CXTranslationUnit cxtup) {
     printf("Debugging treeNode: %012lX\n", node);
     if(node->validcursor == true) {
         if(node->modified > 0) {
-	    printf("\n%i[\n", node->modified);
+	  printf("\n%i[\n", node->modified);
 	    struct treeListNode* modlist = node->modifiedNodes;
 	    /*printf("modlist: %i\n", modlist);
 	    printf("modnode: %i\n", modlist->node);
@@ -1287,13 +1295,16 @@ void freeVariable(struct variable* var) {
 }
 
 void freeNodeList(struct treeListNode* node) {
-    if(node->next != NULL) {
+  //printf("\nnode: %lX\n", node);
+  //printf("\n(%lX == %lX) = %lX", 0, NULL, (0 == NULL));
+    if(node != NULL && node->next != NULL) {
         freeNodeList(node->next);
-    }
+    } 
     free(node);
 }
 
 void freeCrit(struct criticalSection* crit) {
+    printCrit(crit, tree->cxtup);
     freeVariable(crit->accessedvars);
     freeNodeList(crit->nodelist);
     freeNodeList(crit->nodesafter);

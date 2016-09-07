@@ -70,4 +70,6 @@ struct nodeTree* generateTree(char* filename);
 
 void disposeTree(struct nodeTree* tree);
 
+int debugNode2(struct treeNode* node, CXTranslationUnit cxtup);
+
 #endif /* QDTRANS_COMMON */
