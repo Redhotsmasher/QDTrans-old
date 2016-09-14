@@ -22,6 +22,8 @@ int main(int argc, char *argv[]) {
     //printf("Snopp!\n");
     depth = 0;
     printf("\n\n---\n\n");
+    debugTree2(tree->root, tree->cxtup);
+    printf("\n\n---\n\n");
     /*char* outfilename = filename+strlen(filename)-1;
     sprintf(outfilename, "qd.c");
     outfilename = filename;
@@ -29,7 +31,6 @@ int main(int argc, char *argv[]) {
     freopen(outfilename, "w", stdout);*/
     printTree(tree);
     //fclose(stdout);
-    //debugTree2(tree->root, tree->cxtup);
     printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", tree->error, tree->nodes, tree->unmodifiedDepth);
     printf("Final max depth: %i\n", moddepth);
     freeCrits(crits);
