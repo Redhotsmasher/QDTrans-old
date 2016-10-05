@@ -446,7 +446,8 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 			}
 			//newvar->threadLocal = false;
 			CXCursor refcursor = clang_getCursorReferenced(node->cursor);
-			struct treeNode* refnode = findNode(tree->root, refcursor, cxtup); 
+			struct treeNode* refnode = findNode(tree->root, refcursor, cxtup);
+			//debugNode(refnode, cxtup);
  			if(clang_getCursorKind(refnode->parent->cursor) == CXCursor_TranslationUnit) {
 			    newvar->global = true; 
 			} else {
@@ -713,7 +714,7 @@ void scanTree(struct treeNode* node, CXTranslationUnit cxtup) {
 		      //printf("--START--\n");
 		        newnode->newContent = malloc(7*sizeof(char));
 			strcpy(newnode->newContent, &"\nstart");
-			addChildAfter(node->parent, newnode, node/*, cxtup*/);
+			addChildBefore(node->parent, newnode, node, cxtup);
 			//dNode = newnode;
 		    } else {
 		      //printf("---END---\n");

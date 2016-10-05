@@ -154,16 +154,33 @@ void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNod
     newnode->next = currnode->next;
     currnode->next = newnode;
     child->parent = node;
-    if(currnode->node->validcursor == true) {
-        CXSourceRange range = clang_getCursorExtent(currnode->node->cursor);
-	CXSourceLocation rstart = clang_getRangeEnd(range);
-	clang_getFileLocation(rstart, NULL, &(child->startline), &(child->startcol), NULL);
+    if(currnode->next->next != NULL) {
+        if(currnode->next->next->node->validcursor == true) {
+	    CXSourceRange range = clang_getCursorExtent(currnode->next->next->node->cursor);
+	    CXSourceLocation rstart = clang_getRangeStart(range);
+	    clang_getFileLocation(rstart, NULL, &(child->startline), &(child->startcol), NULL);
+	} else {
+	    if (after->validcursor == true) {
+	        CXSourceRange range = clang_getCursorExtent(after->cursor);
+		CXSourceLocation rend = clang_getRangeEnd(range);
+		clang_getFileLocation(rend, NULL, &(child->startline), &(child->startcol), NULL);
+	    } else {
+	        child->startline = after->startline;
+		child->startcol = after->startcol;
+		printf("child->startcol = %i\n\n", child->startcol);
+	    }
+	}
     } else {
-        child->startline = after->startline;
-	child->startcol = after->startcol;
-	printf("child->startcol = %i\n\n", child->startcol);
+        if (after->validcursor == true) {
+	    CXSourceRange range = clang_getCursorExtent(after->cursor);
+	    CXSourceLocation rend = clang_getRangeEnd(range);
+	    clang_getFileLocation(rend, NULL, &(child->startline), &(child->startcol), NULL);
+	} else {
+	    child->startline = after->startline;
+	    child->startcol = after->startcol;
+	    printf("child->startcol = %i\n\n", child->startcol);
+	}
     }
-    child->startcol++;
     printf("child->startline = %i\n", child->startline);
     printf("child->startcol = %i\n", child->startcol);
 }
@@ -200,8 +217,8 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
 	}
 	struct treeListNode* newnode = malloc(sizeof(struct treeListNode));
 	newnode->node = child;
-	newnode->next = currnode->next;
-	currnode->next = newnode;
+	newnode->next = currnode;
+	node->children = newnode;
 	child->parent = node;
 	CXSourceRange range = clang_getCursorExtent(newnode->next->node->cursor);
 	//debugNode2(newnode->next->node);
@@ -211,7 +228,7 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
 	//unsigned sline;
 	//unsigned scol;
 	//clang_getFileLocation(rend, NULL, &sline, &scol, NULL);
-	//printf("child->startline = %i, child->startcol = %i\n", child->startline, child->startcol);
+	printf("child->startline = %i, child->startcol = %i\n", child->startline, child->startcol);
 	//printf("sline = %i, scol = %i\n", sline, scol);
     } else {
         while(currnode->next != NULL) {

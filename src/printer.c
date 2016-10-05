@@ -16,9 +16,9 @@ bool prevmodded = false;
 int nodenum = 0;
 
 char* printNode(struct treeNode* node, CXTranslationUnit cxtup) {
-  //printf("%i\n", sizeof(CXCursor));
-  //printf("Printing node 0x%012lX, has cursor 0x%064lX\n", node, node->cursor);
-  //printf("Still printing node 0x%012lX, has cursor 0x%064lX\n", node, node->cursor);
+    //printf("%i\n", sizeof(CXCursor));
+    //printf("Printing node 0x%012lX, has cursor 0x%064lX\n", node, node->cursor);
+    //printf("Still printing node 0x%012lX, has cursor 0x%064lX\n", node, node->cursor);
     unsigned sline;
     unsigned scol;
     unsigned eline;
@@ -28,7 +28,7 @@ char* printNode(struct treeNode* node, CXTranslationUnit cxtup) {
     clang_getFileLocation(cstart, NULL, &sline, &scol, NULL);
     CXSourceLocation cend = clang_getRangeEnd(range);
     clang_getFileLocation(cend, NULL, &eline, &ecol, NULL);
-  //printf("Still printing node 0x%012lX, spans L%u-%u, C%u-%u\n", node, sline, eline, scol, ecol);
+    //printf("Still printing node 0x%012lX, spans L%u-%u, C%u-%u\n", node, sline, eline, scol, ecol);
     prevline = 0;
     prevcol = 0;
     CXToken* tokens;
@@ -177,7 +177,7 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 			    } else {
 			        for(int i = 0; i < startl-prevline; i++) {
 
-			        printf("\n");
+                                    printf("\n");
 				    //printf("*startline-prevline = %u, i = %u, prevline = %u\n", start-prevline, i, prevline);
 				}
 				if(startc-prevcol > 0) {
@@ -213,15 +213,16 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 	    }
 	}
     } else if(depth == 2) {
-      //printf("Modified node detected.");
-      //debugNode2(node, cxtup);
+        printf("Modified node detected.");
+        //debugNode2(node, cxtup);
         if(node->validcursor == false) {
 	    //Print modified
 	    //debugNode(node, cxtup);
 	    printf("%s\n", node->newContent);
-        } else {
-	    struct treeNode** nodes = malloc((node->modified) * sizeof(struct treeNode));
-	    //printf("%i\n", sizeof(nodes))
+	} else {
+	    struct treeNode** nodes = malloc((node->modified) * sizeof(struct treeNode*));
+	    printf("%i\n", sizeof(struct treeNode));
+	    printf("%i\n", sizeof(nodes));
 	    nodes[node->modified-1] = NULL;
 	    //printf("nodes[node->modified-1]: %i\n", nodes[node->modified-1]);
 	    struct treeNode* next = NULL;
@@ -237,6 +238,8 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 	    int count = 0;
 	    while(nodes[(node->modified)-1] == NULL) {
 	        while(currnode != NULL) {
+		    //printf("currnode->node->startline = %i\n", currnode->node->startline);
+		    debugNode2(currnode->node, cxtup);
 		    if(currnode->node->startline == -1) {
 		        srange = clang_getCursorExtent(currnode->node->cursor);
 			sloc = clang_getRangeStart(srange);
@@ -246,9 +249,9 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 		    }
 		    //printf("\ncurrnode->node: %i, nextnode: %i\nnstartline: %i, smallestline: %i ,csline: %i\nnstartcol: %i, smallestcol: %i, cscol: %i\n", currnode->node, nextnode, currnode->node->startline, smallestline, csline, currnode->node->startcol, smallestcol, cscol);
 		    if(currnode->node->startline < smallestline) {
-		      //printf("\n1\, %i < %i", currnode->node->startline, smallestline);
-		        if((currnode->node->startline >= csline) || (first == true)) {
-			  //printf("\n2, %i > %i", currnode->node->startline);
+		        printf("\n1\, %i < %i", currnode->node->startline, smallestline);
+			if((currnode->node->startline > csline) /*|| (first == true)*/) {
+			    printf("\n2, %i > %i", currnode->node->startline, csline);
 			    smallestline = currnode->node->startline;
 			    smallestcol = currnode->node->startcol;
 			    csline = currnode->node->startline;
@@ -256,171 +259,179 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 			    next = currnode->node;
 			}
 		    } else if(currnode->node->startline == smallestline) {
-		      //printf("3\n");
-		        if(currnode->node->startcol <= smallestcol) {
-			  //printf("4\n");
-			    if((currnode->node->startcol = cscol) || (first == true)) {
-			      //printf("5\n");
-			        smallestline = currnode->node->startline;
-				smallestcol = currnode->node->startcol;
-				csline = currnode->node->startline;
-				cscol = currnode->node->startcol;
-				next = currnode->node;
-			    }
-			}
-		    }
-		    //printf("\n6\n");
-		    //printf("currnode->node: %i, nextnode: %i\nnstartline: %i, smallestline: %i ,csline: %i\nnstartcol: %i, smallestcol: %i, cscol: %i\n", currnode->node, nextnode, currnode->node->startline, smallestline, csline, currnode->node->startcol, smallestcol, cscol);
-		    //debugNode2(currnode->node, cxtup);
-		    currnode = currnode->next;
-		}
-		first = false;
-		nodes[nextnode] = next;
-		//printf("\nnnsl: %i ", nodes[nextnode]->startline);
-		//printf("nsl: %i", next->startline);
-		//printf("nn: %i\n", nextnode);
-		nextnode++;
-		smallestcol = INT_MAX;
-		smallestline = INT_MAX;
-		currnode = node->modifiedNodes;
-	    }
-	    /*for(int i = 0; i <= (node->modified)-1; i++) {
-	        printf("%i\n", node->modified);
-	        printf("nodenum: %i, nstartline: %i, nstartcol: %i\n", i, nodes[i]->startline, nodes[i]->startcol);
-		printf("content%i: %s\n", i, nodes[i]->newContent);
-		debugNode2(nodes[i], cxtup);
-		}*/
-	    CXSourceRange range = clang_getCursorExtent(node->cursor);
-	    CXToken* tokens;
-	    unsigned int numTokens;
-	    int numNodes = nextnode;
-	    nextnode = 0;
-	    clang_tokenize(cxtup, range, &tokens, &numTokens);
-	    for(int i = 0; i<numTokens; i++) {
-	        CXSourceRange tokenrange = clang_getTokenExtent(cxtup, tokens[i]);
-	        CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
-		unsigned startline;
-		unsigned startcol;
-		unsigned endline;
-		unsigned endcol;
-	        CXSourceLocation currend = clang_getRangeEnd(tokenrange);
-	        clang_getFileLocation(currend, NULL, &endline, &endcol, NULL);
-	        if(prevcol != 0) {
-		    CXSourceLocation currstart = clang_getRangeStart(tokenrange);
-		    clang_getFileLocation(currstart, NULL, &startline, &startcol, NULL);
-		    //printf("L%u-%u, C%u-%u", *startline, prevline, *startcol, prevcol);
-		    int startl = startline;
-		    int startc = startcol;
-		    if(prevmodded == true) {
-		        prevmodded = false;
-		    } else {
-		        for(int i = 0; i < startl-prevline; i++) {
-			    printf("\n");
-			    //printf("*startline-prevline = %u, i = %u, prevline = %u\n", start-prevline, i, prevline);
-			}
-			if(startc-prevcol > 0) {
-			    for(int i = 0; i < startc-prevcol; i++) {
-			      printf(" ");
-			    }
-			} else if (startc-prevcol < 0) {
-			    for(int i = 0; i < startc; i++) {
-			        printf(" ");
-			    }
-			}
-		    }
-		}
-		char* tstr = clang_getCString(tokenstring);
-		//printf("%i == %i, %i == %i\n", endline, prevline, endcol, prevcol);
-		if(/*i == 0 &&*/ endline == prevline && endcol == prevcol) {	    
-		    // Do nothing, print nothing.
-		} else {
-		    //printf("nextstartline: %i, startline: %i\n", nodes[nextnode]->startline, startline);
-		    //printf("%i < %i && (%i == %i) && (%i == %i)\n", nextnode, numNodes, nodes[nextnode]->startline, startline, nodes[nextnode]->startcol, startcol);
-		    if((nextnode < numNodes) && (nodes[nextnode]->startline == startline) && (nodes[nextnode]->startcol == startcol)) {
-		      //int* nodenext = &(nodes[nextnode]->cursor);
-		        if(nodes[nextnode]->validcursor == false) {
-			    printf("%s\n", nodes[nextnode]->newContent);
-			    nextnode++;
-			    i--;
-			    printf("ASDFASDFASDF");
-			} else {
-			  //printf("%i\n", i);
-			    char* nodenewcontent = nodes[nextnode]->newContent;
-			    if(strcmp(nodenewcontent, "")) {
-			        printf("%s\n    ", nodenewcontent); // Not perfect but good enough.
-			    }
-			    prevline = endline;
-			    prevcol = endcol;
-			    CXSourceRange modrange = clang_getCursorExtent(nodes[nextnode]->cursor);
-			    CXSourceLocation modend = clang_getRangeEnd(modrange);
-			    int lastline;
-			    int lastcol;
-			    clang_getFileLocation(modend, NULL, &lastline, &lastcol, NULL);
-			    while(prevcol < lastcol || prevline < lastline) {
-			      //printf("%i < %i || %i < %i\n", prevcol, lastcol, prevline, lastline);
-			        i++;
-			        CXSourceRange trange = clang_getTokenExtent(cxtup, tokens[i]);
-				CXSourceLocation tend = clang_getRangeEnd(trange);
-				clang_getFileLocation(tend, NULL, &prevline, &prevcol, NULL);
-				prevcol--; // Fix for duplication issue.
-			    }
-			    //printf("%i < %i || %i < %i\n", prevcol, lastcol, prevline, lastline);
-			    
-			    nextnode++;
-			    //printf("%i\n", i);
-			    prevmodded = true;
-			}
-		    } else {
-		        printf("%s", tstr);
-			prevline = endline;
-			prevcol = endcol;
-		    }
-		}
-		//printf("%i\n", sizeof(nodes));
-		clang_disposeString(tokenstring);  
-	    }
-	    clang_disposeTokens(cxtup, tokens, numTokens);
-	    free(nodes);
-	}
+		        printf("\n3");
+		        if(currnode->node->startcol < smallestcol) {
+                            printf("\n4, %i < %i", currnode->node->startcol, smallestcol);
+                            if((currnode->node->startcol > cscol) /*|| (first == true)*/) {
+                                printf("\n5, %i > %i", currnode->node->startcol, cscol);
+                                smallestline = currnode->node->startline;
+                                smallestcol = currnode->node->startcol;
+                                csline = currnode->node->startline;
+                                cscol = currnode->node->startcol;
+                                next = currnode->node;
+                            }
+                        }
+                    }
+                    printf("\n6\n");
+                    //printf("currnode->node: %i, nextnode: %i\nnstartline: %i, smallestline: %i ,csline: %i\nnstartcol: %i, smallestcol: %i, cscol: %i\n", currnode->node, nextnode, currnode->node->startline, smallestline, csline, currnode->node->startcol, smallestcol, cscol);
+                    //debugNode2(currnode->node, cxtup);
+                    currnode = currnode->next;
+                }
+                //printf("nextnode: %i\n", nextnode);
+                //first = false;
+                nodes[nextnode] = next;
+                //printf("\nnnsl: %i ", nodes[nextnode]->startline);
+                //printf("nsl: %i", next->startline);
+                //printf("nn: %i\n", nextnode);
+                nextnode++;
+                smallestcol = INT_MAX;
+                smallestline = INT_MAX;
+                currnode = node->modifiedNodes;
+                printf("nodes[node->modified-1]: %lX\n", nodes[node->modified-1]);
+            }
+            printf("-[END]-");
+            for(int i = 0; i <= (node->modified)-1; i++) {
+                printf("%i\n", node->modified);
+                printf("nodenum: %i, nstartline: %i, nstartcol: %i\n", i, nodes[i]->startline, nodes[i]->startcol);
+                printf("content%i: %s\n", i, nodes[i]->newContent);
+                debugNode2(nodes[i], cxtup);
+            }
+            CXSourceRange range = clang_getCursorExtent(node->cursor);
+            CXToken* tokens;
+            unsigned int numTokens;
+            int numNodes = nextnode;
+            nextnode = 0;
+            clang_tokenize(cxtup, range, &tokens, &numTokens);
+            for(int i = 0; i<numTokens; i++) {
+                CXSourceRange tokenrange = clang_getTokenExtent(cxtup, tokens[i]);
+                CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
+                unsigned startline;
+                unsigned startcol;
+                unsigned endline;
+                unsigned endcol;
+                CXSourceLocation currend = clang_getRangeEnd(tokenrange);
+                clang_getFileLocation(currend, NULL, &endline, &endcol, NULL);
+                if(prevcol != 0) {
+                    CXSourceLocation currstart = clang_getRangeStart(tokenrange);
+                    clang_getFileLocation(currstart, NULL, &startline, &startcol, NULL);
+                    //printf("L%u-%u, C%u-%u", *startline, prevline, *startcol, prevcol);
+                    int startl = startline;
+                    int startc = startcol;
+                    if(prevmodded == true) {
+                        prevmodded = false;
+                    } else {
+                        for(int i = 0; i < startl-prevline; i++) {
+                            printf("\n");
+                            //printf("*startline-prevline = %u, i = %u, prevline = %u\n", start-prevline, i, prevline);
+                        }
+                        if(startc-prevcol > 0) {
+                            for(int i = 0; i < startc-prevcol; i++) {
+                                printf(" ");
+                            }
+                        } else if (startc-prevcol < 0) {
+                            for(int i = 0; i < startc; i++) {
+                                printf(" ");
+                            }
+                        }
+                    }
+                }
+                char* tstr = clang_getCString(tokenstring);
+                //printf("%i == %i, %i == %i\n", endline, prevline, endcol, prevcol);
+                if(/*i == 0 &&*/ endline == prevline && endcol == prevcol) {	    
+                    // Do nothing, print nothing.
+                } else {
+                    //printf("nextstartline: %i, startline: %i\n", nodes[nextnode]->startline, startline);
+                    if(nextnode < numNodes) {
+                        printf("\n%i < %i && (%i == %i) && (%i < %i)\n", nextnode, numNodes, nodes[nextnode]->startline, startline, nodes[nextnode]->startcol, startcol);
+                    } else {
+                        printf("\n%i < %i && (%i == %i) && (%i < %i)\n", nextnode, numNodes, nodes[nextnode-1]->startline, startline, nodes[nextnode-1]->startcol, startcol);
+                    }
+                    if((nextnode < numNodes) && (nodes[nextnode]->startline == startline) && (nodes[nextnode]->startcol < startcol)) {
+                        //int* nodenext = &(nodes[nextnode]->cursor);
+                        if(nodes[nextnode]->validcursor == false) {
+                            printf("%s\n", nodes[nextnode]->newContent);
+                            nextnode++;
+                            i--;
+                            //printf("ASDFASDFASDF");
+                        } else {
+                            //printf("%i\n", i);
+                            char* nodenewcontent = nodes[nextnode]->newContent;
+                            if(strcmp(nodenewcontent, "")) {
+                                printf("%s\n    ", nodenewcontent); // Not perfect but good enough.
+                            }
+                            prevline = endline;
+                            prevcol = endcol;
+                            if(nodes[nextnode]->validcursor == true) {
+                                CXSourceRange modrange = clang_getCursorExtent(nodes[nextnode]->cursor);
+                                CXSourceLocation modend = clang_getRangeEnd(modrange);
+                                int lastline;
+                                int lastcol;
+                                clang_getFileLocation(modend, NULL, &lastline, &lastcol, NULL);
+                                while(prevcol < lastcol || prevline < lastline) {
+                                    //printf("%i < %i || %i < %i\n", prevcol, lastcol, prevline, lastline);
+                                    i++;
+                                    CXSourceRange trange = clang_getTokenExtent(cxtup, tokens[i]);
+                                    CXSourceLocation tend = clang_getRangeEnd(trange);
+                                    clang_getFileLocation(tend, NULL, &prevline, &prevcol, NULL);
+                                    prevcol--; // Fix for duplication issue.
+                                }
+                            }
+                            //printf("%i < %i || %i < %i\n", prevcol, lastcol, prevline, lastline);
+                            nextnode++;
+                            //printf("%i\n", i);
+                            prevmodded = true;
+                        }
+                    } else {
+                        printf("%s", tstr);
+                        prevline = endline;
+                        prevcol = endcol;
+                    }
+                }
+                //printf("%i\n", sizeof(nodes));
+                clang_disposeString(tokenstring);  
+            }
+            clang_disposeTokens(cxtup, tokens, numTokens);
+            free(nodes);
+        }
     }
     if(node->children != NULL) {
         struct treeListNode* childlist = node->children;
-	while(childlist != NULL) {
-	    printTreeRecursive(childlist->node, cxtup);
-	    childlist = childlist->next;
-	}
+        while(childlist != NULL) {
+            printTreeRecursive(childlist->node, cxtup);
+            childlist = childlist->next;
+        }
     }
     depth--;
 }
 
 /*
-void scanTree(struct treeNode* node, CXTranslationUnit cxtup) {
-    depth++;
-    CXSourceRange range = clang_getCursorExtent(node->cursor);
-    CXSourceLocation rstart = clang_getRangeStart(range);
-    if(clang_Location_isFromMainFile(rstart) != 0) {
-        enum CXCursorKind cursorkind = clang_getCursorKind(node->cursor);
-        if(depth == 1 && cursorkind != CXCursor_MacroExpansion) {
-	    CXString cdisplaystring = clang_getCursorDisplayName(node->cursor);
-	    char* str = clang_getCString(cdisplaystring);
-	    //printf("Scanning: %s\n", str);
-	    clang_disposeString(cdisplaystring);
-	    struct treeNode* newnode = malloc(sizeof(struct treeNode));
-	    newnode->childCount = 0;
-	    newnode->children = NULL;
-	    newnode->cursor = node->cursor;
-	    addChild(d1nodelist, newnode);
-        }
-    }
-    if(node->children != NULL) {
-        struct treeListNode* childlist = node->children;
-	while(childlist != NULL) {
-	    scanTree(childlist->node, cxtup);
-	    childlist = childlist->next;
-	}
-    }
-    depth--;
-}
+  void scanTree(struct treeNode* node, CXTranslationUnit cxtup) {
+  depth++;
+  CXSourceRange range = clang_getCursorExtent(node->cursor);
+  CXSourceLocation rstart = clang_getRangeStart(range);
+  if(clang_Location_isFromMainFile(rstart) != 0) {
+  enum CXCursorKind cursorkind = clang_getCursorKind(node->cursor);
+  if(depth == 1 && cursorkind != CXCursor_MacroExpansion) {
+  CXString cdisplaystring = clang_getCursorDisplayName(node->cursor);
+  char* str = clang_getCString(cdisplaystring);
+  //printf("Scanning: %s\n", str);
+  clang_disposeString(cdisplaystring);
+  struct treeNode* newnode = malloc(sizeof(struct treeNode));
+  newnode->childCount = 0;
+  newnode->children = NULL;
+  newnode->cursor = node->cursor;
+  addChild(d1nodelist, newnode);
+  }
+  }
+  if(node->children != NULL) {
+  struct treeListNode* childlist = node->children;
+  while(childlist != NULL) {
+  scanTree(childlist->node, cxtup);
+  childlist = childlist->next;
+  }
+  }
+  depth--;
+  }
 */
 
 void printTree(struct nodeTree* inTree) {
