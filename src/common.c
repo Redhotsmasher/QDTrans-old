@@ -167,7 +167,9 @@ void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNod
 	    } else {
 	        child->startline = after->startline;
 		child->startcol = after->startcol;
-		printf("child->startcol = %i\n\n", child->startcol);
+		/*printf("child->startcol = %i\n\n", child->startcol);
+                  printf("[III]\n\n");*/
+                child->startcol += 100000;
 	    }
 	}
     } else {
@@ -178,7 +180,9 @@ void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNod
 	} else {
 	    child->startline = after->startline;
 	    child->startcol = after->startcol;
-	    printf("child->startcol = %i\n\n", child->startcol);
+	    /*printf("child->startcol = %i\n\n", child->startcol);
+              printf("[V]\n\n");*/
+            child->startcol += 100000;
 	}
     }
     printf("child->startline = %i\n", child->startline);

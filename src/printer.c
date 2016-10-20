@@ -213,7 +213,7 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 	    }
 	}
     } else if(depth == 2) {
-        printf("Modified node detected.");
+        //printf("Modified node detected.");
         //debugNode2(node, cxtup);
         if(node->validcursor == false) {
 	    //Print modified
@@ -239,19 +239,19 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 	    while(nodes[(node->modified)-1] == NULL) {
 	        while(currnode != NULL) {
 		    //printf("currnode->node->startline = %i\n", currnode->node->startline);
-		    debugNode2(currnode->node, cxtup);
+		    //debugNode2(currnode->node, cxtup);
 		    if(currnode->node->startline == -1) {
 		        srange = clang_getCursorExtent(currnode->node->cursor);
 			sloc = clang_getRangeStart(srange);
 			clang_getFileLocation(sloc, NULL, &(currnode->node->startline), &(currnode->node->startcol), NULL);
-			printf("Calculated node %i: startline: %i, startcol: %i\n", currnode->node, currnode->node->startline, currnode->node->startcol);
+			//printf("Calculated node %i: startline: %i, startcol: %i\n", currnode->node, currnode->node->startline, currnode->node->startcol);
 			//debugNode2(currnode->node, cxtup);
 		    }
 		    //printf("\ncurrnode->node: %i, nextnode: %i\nnstartline: %i, smallestline: %i ,csline: %i\nnstartcol: %i, smallestcol: %i, cscol: %i\n", currnode->node, nextnode, currnode->node->startline, smallestline, csline, currnode->node->startcol, smallestcol, cscol);
 		    if(currnode->node->startline < smallestline) {
-		        printf("\n1\, %i < %i", currnode->node->startline, smallestline);
+		        //printf("\n1\, %i < %i", currnode->node->startline, smallestline);
 			if((currnode->node->startline > csline) /*|| (first == true)*/) {
-			    printf("\n2, %i > %i", currnode->node->startline, csline);
+			    //printf("\n2, %i > %i", currnode->node->startline, csline);
 			    smallestline = currnode->node->startline;
 			    smallestcol = currnode->node->startcol;
 			    csline = currnode->node->startline;
@@ -259,11 +259,11 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 			    next = currnode->node;
 			}
 		    } else if(currnode->node->startline == smallestline) {
-		        printf("\n3");
+		        //printf("\n3");
 		        if(currnode->node->startcol < smallestcol) {
-                            printf("\n4, %i < %i", currnode->node->startcol, smallestcol);
+                            //printf("\n4, %i < %i", currnode->node->startcol, smallestcol);
                             if((currnode->node->startcol > cscol) /*|| (first == true)*/) {
-                                printf("\n5, %i > %i", currnode->node->startcol, cscol);
+                                //printf("\n5, %i > %i", currnode->node->startcol, cscol);
                                 smallestline = currnode->node->startline;
                                 smallestcol = currnode->node->startcol;
                                 csline = currnode->node->startline;
@@ -272,7 +272,7 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
                             }
                         }
                     }
-                    printf("\n6\n");
+                    //printf("\n6\n");
                     //printf("currnode->node: %i, nextnode: %i\nnstartline: %i, smallestline: %i ,csline: %i\nnstartcol: %i, smallestcol: %i, cscol: %i\n", currnode->node, nextnode, currnode->node->startline, smallestline, csline, currnode->node->startcol, smallestcol, cscol);
                     //debugNode2(currnode->node, cxtup);
                     currnode = currnode->next;
@@ -287,15 +287,15 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
                 smallestcol = INT_MAX;
                 smallestline = INT_MAX;
                 currnode = node->modifiedNodes;
-                printf("nodes[node->modified-1]: %lX\n", nodes[node->modified-1]);
+                //printf("nodes[node->modified-1]: %lX\n", nodes[node->modified-1]);
             }
-            printf("-[END]-");
-            for(int i = 0; i <= (node->modified)-1; i++) {
+            //printf("-[END]-");
+            /*for(int i = 0; i <= (node->modified)-1; i++) {
                 printf("%i\n", node->modified);
                 printf("nodenum: %i, nstartline: %i, nstartcol: %i\n", i, nodes[i]->startline, nodes[i]->startcol);
                 printf("content%i: %s\n", i, nodes[i]->newContent);
                 debugNode2(nodes[i], cxtup);
-            }
+                }*/
             CXSourceRange range = clang_getCursorExtent(node->cursor);
             CXToken* tokens;
             unsigned int numTokens;
@@ -304,12 +304,18 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
             clang_tokenize(cxtup, range, &tokens, &numTokens);
             for(int i = 0; i<numTokens; i++) {
                 CXSourceRange tokenrange = clang_getTokenExtent(cxtup, tokens[i]);
+                CXSourceRange noderange;
+                if(nextnode < numNodes) {
+                    noderange = clang_getCursorExtent(nodes[nextnode]->cursor);
+                } else {
+                    noderange = tokenrange; // noderange won't actually be used in this case (all modified nodes already printed) but needs to have a value to avoid attempting to read beyond the end of nodes[].
+                }
                 CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
                 unsigned startline;
                 unsigned startcol;
                 unsigned endline;
                 unsigned endcol;
-                CXSourceLocation currend = clang_getRangeEnd(tokenrange);
+                CXSourceLocation currend = clang_getRangeEnd(range);
                 clang_getFileLocation(currend, NULL, &endline, &endcol, NULL);
                 if(prevcol != 0) {
                     CXSourceLocation currstart = clang_getRangeStart(tokenrange);

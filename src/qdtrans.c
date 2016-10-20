@@ -43,10 +43,10 @@ struct criticalSection* crits = NULL;
 
 struct nodeTree* tree;
 
-moddednodes = 0;
-tnodes = 0;
-critCount = 0;
-moddepth = 0;
+int moddednodes = 0;
+int tnodes = 0;
+int critCount = 0;
+int moddepth = 0;
 
 bool first;
 
@@ -76,8 +76,6 @@ void scanCrit(struct criticalSection* crit, CXTranslationUnit cxtup);
 
 void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTranslationUnit cxtup, bool isreturn);
 
-
-
 void findCrits(struct treeNode* node, CXTranslationUnit cxtup);
 
 void scanTree(struct treeNode* node, CXTranslationUnit cxtup);
@@ -85,6 +83,27 @@ void scanTree(struct treeNode* node, CXTranslationUnit cxtup);
 void freeCrits(struct criticalSection* crit);
 
 void printQDUsage();
+
+void clearNode(struct treeListNode* node) {
+    struct treeListNode* currnode = node;
+    //char* newchar = calloc(1, 1);
+    char* newchar = malloc(1);
+    strcpy(newchar, "");
+    currnode->node->newContent = newchar;
+    struct treeNode* currnode2 = currnode->node;
+    while(currnode2 != NULL) {
+        currnode2->modified++;
+        addModified(currnode2, currnode->node);
+        currnode2 = currnode2->parent;
+    }
+    if(currnode->node->children != NULL) {
+        struct treeListNode* childlist = currnode->node->children;
+	while(childlist != NULL) {
+	    clearNode(childlist);
+	    childlist = childlist->next;
+	}
+    }
+}
 
 void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
     tree->root->modified = 0;
@@ -231,6 +250,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    printf("\n}\n"); //"funend"
 	    struct treeNode* currnode2 = currcrit->nodelist->node;
 	    struct treeNode* locknode = currnode2;
+            clearNode(currcrit->nodelist);
 	    locknode->newContent = fcallstring;
 	    printf("locknode->newContent: %s\n", locknode->newContent);
 	    currnode2->modified++;
@@ -247,28 +267,10 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    currnode = currcrit->nodelist->next;
 	    //debugNode(currnode->node, cxtup);
 	    while(currnode != NULL) {
-	      //char* newchar = calloc(1, 1);
-	        char* newchar = malloc(1);
-	        strcpy(newchar, "");
-		currnode->node->newContent = newchar;
-		currnode2 = currnode->node;
-		while(currnode2 != NULL) {
-		    currnode2->modified++;
-		    addModified(currnode2, currnode->node);
-		    currnode2 = currnode2->parent;
-		}
+	        clearNode(currnode);
 		currnode = currnode->next;
 	    }
-	    currnode = currcrit->nodesafter;
-	    char* newchar = malloc(1);
-	    strcpy(newchar, "");
-	    currnode->node->newContent = newchar;
-	    currnode2 = currnode->node;
-	    while(currnode2 != NULL) {
-	        currnode2->modified++;
-	        addModified(currnode2, currnode->node);
-	        currnode2 = currnode2->parent;
-	    }
+	    clearNode(currcrit->nodesafter);
 	    currnode = tree->root->children;
 	    CXSourceRange drange = clang_getCursorExtent(node->cursor);
 	    CXSourceLocation drstart = clang_getRangeStart(drange);
