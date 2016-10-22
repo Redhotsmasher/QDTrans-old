@@ -942,8 +942,8 @@ void debugTree2(struct treeNode* node, CXTranslationUnit cxtup) {
 		}
 	    }
 	} else {
-	    printf("BN");
-	}
+	    printf("BN");          
+        }
 	clang_disposeString(typestring);
 	clang_disposeString(cdisplaystring);
 	clang_disposeString(cspellstring);
@@ -960,6 +960,7 @@ void debugTree2(struct treeNode* node, CXTranslationUnit cxtup) {
 	    printf("%s", space);
 	}
 	printf("%i, %s", node->modified, node->newContent);
+        printf("(L%u:C%u)\n-[]-\n", node->startline, node->startcol);
 	if(node->children != NULL) {
 	    printf("->\n");
 	    struct treeListNode* childlist = node->children;

@@ -221,8 +221,8 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 	    printf("%s\n", node->newContent);
 	} else {
 	    struct treeNode** nodes = malloc((node->modified) * sizeof(struct treeNode*));
-	    printf("%i\n", sizeof(struct treeNode));
-	    printf("%i\n", sizeof(nodes));
+	    //printf("%i\n", sizeof(struct treeNode));
+	    //printf("%i\n", sizeof(nodes));
 	    nodes[node->modified-1] = NULL;
 	    //printf("nodes[node->modified-1]: %i\n", nodes[node->modified-1]);
 	    struct treeNode* next = NULL;
@@ -316,7 +316,7 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
                 unsigned startcol;
                 unsigned endline;
                 unsigned endcol;
-                CXSourceLocation currend = clang_getRangeEnd(range);
+                CXSourceLocation currend = clang_getRangeEnd(tokenrange);
                 clang_getFileLocation(currend, NULL, &endline, &endcol, NULL);
                 if(prevcol != 0) {
                     CXSourceLocation currstart = clang_getRangeStart(tokenrange);
@@ -387,7 +387,8 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
                         }
                     } else {
                         printf("%s", tstr);
-                        clang_getFileLocation(tokenend, NULL, &prevline, &prevcol, NULL);
+                        prevline = endline;
+                        prevcol = endcol;
                     }
                 }
                 //printf("%i\n", sizeof(nodes));

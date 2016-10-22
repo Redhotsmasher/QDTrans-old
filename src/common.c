@@ -159,17 +159,19 @@ void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNod
 	    CXSourceRange range = clang_getCursorExtent(currnode->next->next->node->cursor);
 	    CXSourceLocation rstart = clang_getRangeStart(range);
 	    clang_getFileLocation(rstart, NULL, &(child->startline), &(child->startcol), NULL);
+            child->startcol--;
 	} else {
 	    if (after->validcursor == true) {
 	        CXSourceRange range = clang_getCursorExtent(after->cursor);
 		CXSourceLocation rend = clang_getRangeEnd(range);
 		clang_getFileLocation(rend, NULL, &(child->startline), &(child->startcol), NULL);
+                child->startcol--;
 	    } else {
 	        child->startline = after->startline;
 		child->startcol = after->startcol;
 		/*printf("child->startcol = %i\n\n", child->startcol);
                   printf("[III]\n\n");*/
-                child->startcol += 100000;
+                child->startcol += 100000; // Ugly fix, only neccessary in corner case, hopefully never needed anyway.
 	    }
 	}
     } else {
