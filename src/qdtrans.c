@@ -254,7 +254,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    locknode->newContent = fcallstring;
 	    printf("locknode->newContent: %s\n", locknode->newContent);
 	    currnode2->modified++;
-	    addModified(currnode2, locknode);
+	    //addModified(currnode2, locknode);
 	    printf("locknode->newContent: %s\n", locknode->newContent);
 	    while(currnode2->parent != NULL) {
 	        currnode2 = currnode2->parent;
@@ -887,7 +887,10 @@ void debugTree2(struct treeNode* node, CXTranslationUnit cxtup) {
 	    printf("\n%i@%i[\n", node->modified, depth);
 	    struct treeListNode* modlist = node->modifiedNodes;
 	    while(modlist != NULL) {
-	        printf("    %s\n", modlist->node->newContent);
+                printf("    %s\n", modlist->node->newContent);
+                if(modlist->node->validcursor == true) {
+                    debugUnmodifiedNode(modlist->node, cxtup);
+                }
 		modlist = modlist->next;
 	    }
 	    //printf("    %s\n", modlist->node->newContent);
@@ -1078,10 +1081,12 @@ void debugNode(struct treeNode* node, CXTranslationUnit cxtup) {
 	  printf("\n%i[\n", node->modified);
 	    struct treeListNode* modlist = node->modifiedNodes;
 	    /*printf("modlist: %i\n", modlist);
-	    printf("modnode: %i\n", modlist->node);
-	    debugUnmodifiedNode(modlist->node, cxtup);*/
+              printf("modnode: %i\n", modlist->node);*/
 	    while(modlist != NULL) {
-	        printf("    %s\n", modlist->node->newContent);
+                printf("    %s\n", modlist->node->newContent);
+                if(modlist->node->validcursor == true) {
+                    debugUnmodifiedNode(modlist->node, cxtup);
+                }
 		modlist = modlist->next;
 	    }
 	    //printf("    %s\n", modlist->node->newContent);

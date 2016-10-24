@@ -289,8 +289,8 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
                 currnode = node->modifiedNodes;
                 //printf("nodes[node->modified-1]: %lX\n", nodes[node->modified-1]);
             }
-            //printf("-[END]-");
-            /*for(int i = 0; i <= (node->modified)-1; i++) {
+            /*printf("Sorted nodes are:\n");
+            for(int i = 0; i <= (node->modified)-1; i++) {
                 printf("%i\n", node->modified);
                 printf("nodenum: %i, nstartline: %i, nstartcol: %i\n", i, nodes[i]->startline, nodes[i]->startcol);
                 printf("content%i: %s\n", i, nodes[i]->newContent);
@@ -353,7 +353,7 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
                     } else {
                         //printf("\n%i < %i && (%i == %i) && (%i < %i)\n", nextnode, numNodes, nodes[nextnode-1]->startline, startline, nodes[nextnode-1]->startcol, startcol);
                     }
-                    if((nextnode < numNodes) && (nodes[nextnode]->startline == startline) && (nodes[nextnode]->startcol < startcol)) {
+                    if((nextnode < numNodes) && (nodes[nextnode]->startline == startline) && (nodes[nextnode]->startcol <= startcol)) {
                         int* nodenext = &(nodes[nextnode]->cursor);
                         if(nodes[nextnode]->validcursor == false) {
                             printf("%s\n", nodes[nextnode]->newContent);
@@ -374,10 +374,14 @@ void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
                                 int lastline;
                                 int lastcol;
                                 clang_getFileLocation(modend, NULL, &lastline, &lastcol, NULL);
-                                while(prevcol < lastcol || prevline < lastline) {
-                                    printf("%i < %i || %i < %i\n", prevcol, lastcol, prevline, lastline);
+                                clang_getFileLocation(tokenend, NULL, &prevline, &prevcol, NULL);
+                                while((prevcol < lastcol || prevline < lastline) && (i < numTokens)) {
+                                    //printf("%i < %i || %i < %i\n", prevcol, lastcol, prevline, lastline);
+                                    tokenrange = clang_getTokenExtent(cxtup, tokens[i]);
+                                    tokenend = clang_getRangeEnd(tokenrange);
                                     clang_getFileLocation(tokenend, NULL, &prevline, &prevcol, NULL);
-                                    prevcol--; // Fix for duplication issue.
+                                    i++;
+                                    // prevcol--; // Fix for duplication issue.
                                 }
                             }
                             //printf("%i < %i || %i < %i\n", prevcol, lastcol, prevline, lastline);
