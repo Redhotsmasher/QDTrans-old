@@ -24,13 +24,13 @@ int main(int argc, char *argv[]) {
     printf("\n\n---\n\n");
     debugTree2(tree->root, tree->cxtup);
     printf("\n\n---\n\n");
-    /*char* outfilename = filename+strlen(filename)-1;
+    char* outfilename = filename+strlen(filename)-1;
     sprintf(outfilename, "qd.c");
     outfilename = filename;
     printf("Saving to %s...\n", outfilename);
-    freopen(outfilename, "w", stdout);*/
+    freopen(outfilename, "w", stdout);
     printTree(tree);
-    //fclose(stdout);
+    fclose(stdout);
     printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", tree->error, tree->nodes, tree->unmodifiedDepth);
     printf("Final max depth: %i\n", moddepth);
     freeCrits(crits);

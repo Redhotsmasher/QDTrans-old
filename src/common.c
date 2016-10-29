@@ -139,7 +139,7 @@ void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNod
         }
     }
     if(child->modified != 0) {
-        child->modified++;
+        //child->modified++;
         node->modified++;
         struct treeNode* currnode2 = node;
 	addModified(currnode2, child);
@@ -210,7 +210,7 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
     if(clang_equalCursors(currnode->node->cursor, before->cursor) == 1) {
         printf("addingToFirst\n");
 	if(child->modified != 0) {
-	    child->modified++;
+	    //child->modified++;
 	    node->modified++;
 	    struct treeNode* currnode2 = node;
 	    addModified(currnode2, child);
@@ -220,7 +220,7 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
 		currnode2->modified++;
 		addModified(currnode2, child);
 	    }
-	}
+        }
 	struct treeListNode* newnode = malloc(sizeof(struct treeListNode));
 	newnode->node = child;
 	newnode->next = currnode;
@@ -269,13 +269,13 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
 	debugNode2(currnode->next->node, cxtup);
 	printf("\n-O-\n");*/
         
-        printf("addChildAfter(");
+        /*printf("addChildAfter(");
 	debugNode2(node, cxtup);
 	printf(", ");
 	debugNode2(child, cxtup);
 	printf(", ");
 	debugNode2(currnode->node, cxtup);
-	printf(")\n");
+	printf(")\n");*/
 	addChildAfter(node, child, currnode->node);
     }
 }

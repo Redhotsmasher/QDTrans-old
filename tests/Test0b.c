@@ -15,6 +15,7 @@ int main(int argc, char *argv[]) {
     //refactorCrits(tree->root, tree->cxtup);
     //printf("Snopp!\n");
     //depth = 0;
+    //debugTree2(tree->root, tree->cxtup);
     //printTree(tree);
     traverseTree(tree->root, tree->cxtup);
     //printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", tree->error, tree->nodes, tree->unmodifiedDepth);
@@ -32,7 +33,7 @@ int traverseTree (struct treeNode* node, CXTranslationUnit cxtup) {
 	while(childlist != NULL) {
 	    if(childlist->node->modified > 0) {
 	        if(depth2 == 1) {
-		     counter++;
+                    counter++;
 	        }
 	        checkTree(childlist->node, cxtup);
 	    }
@@ -49,10 +50,16 @@ int checkTree (struct treeNode* node, CXTranslationUnit cxtup) {
     struct treeListNode* nodeToTest = childlist->next->next;
     if ((nodeToTest->node->modified == 1) && (strcmp(nodeToTest->node->newContent, &"\nstart") == 0)) {
         counter++;
+    } else {
+        printf("|%i|\n", nodeToTest->node->modified);
+        printf("|%s|\n", nodeToTest->node->newContent);
     }
     nodeToTest = nodeToTest->next->next->next;
     if ((nodeToTest->node->modified == 1) && (strcmp(nodeToTest->node->newContent, &"\nend") == 0)) {
         counter++;
+    } else {
+        printf("|%i|\n", nodeToTest->node->modified);
+        printf("|%s|\n", nodeToTest->node->newContent);
     }
     depth2--;
     depth2--;
