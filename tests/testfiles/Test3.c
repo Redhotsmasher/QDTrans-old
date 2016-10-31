@@ -70,5 +70,9 @@ int main() {
     sem_destroy(&sem);
     printf("%d\n", value); // Should print "2".
     printf("%d\n", value2); // Should print "1".
-    return 0;
+    if(value == 2 && value2 == 1) {
+        return 0;
+    } else {
+        return 1;
+    }
 }

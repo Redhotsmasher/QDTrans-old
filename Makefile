@@ -12,7 +12,7 @@ all: main utils tests
 
 utils: common.o dumptree printer.o printtree
 
-tests: test0
+tests: test0 testzero test1 test2 test3 test4 test5 test6 test7 test8 test9
 
 debug: debug_common.o debug_dumptree debug_printer.o debug_printtree debug_qdtrans.o debug_main
 
@@ -76,6 +76,7 @@ mdebug_main: mdebug_common.o mdebug_printer.o mdebug_qdtrans.o
 
 clean:
 	rm -f bin/*
+	rm -f tests/testfiles/*.qd.c
 
 
 
@@ -89,3 +90,44 @@ test0b: debug_common.o debug_printer.o debug_qdtrans.o
 
 test0c: debug_common.o debug_printer.o debug_qdtrans.o
 	$(CC) tests/Test0c.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test0c
+
+
+testzero: debug_main
+	./bin/qdtrans ./tests/testfiles/Test0.c
+	$(CC) tests/testfiles/Test0.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+
+test1: debug_main
+	./bin/qdtrans ./tests/testfiles/Test1.c
+	$(CC) tests/testfiles/Test1.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+
+test2: debug_main
+	./bin/qdtrans ./tests/testfiles/Test2.c
+	$(CC) tests/testfiles/Test2.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+
+test3: debug_main
+	./bin/qdtrans ./tests/testfiles/Test3.c
+	$(CC) tests/testfiles/Test3.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+
+test4: debug_main
+	./bin/qdtrans ./tests/testfiles/Test4.c
+	$(CC) tests/testfiles/Test4.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+
+test5: debug_main
+	./bin/qdtrans ./tests/testfiles/Test5.c
+	$(CC) tests/testfiles/Test5.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+
+test6: debug_main
+	./bin/qdtrans ./tests/testfiles/Test6.c
+	$(CC) tests/testfiles/Test6.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+
+test7: debug_main
+	./bin/qdtrans ./tests/testfiles/Test7.c
+	$(CC) tests/testfiles/Test7.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+
+test8: debug_main
+	./bin/qdtrans ./tests/testfiles/Test8.c
+	$(CC) tests/testfiles/Test8.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+
+test9: debug_main
+	./bin/qdtrans ./tests/testfiles/Test9.c
+	$(CC) tests/testfiles/Test9.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread

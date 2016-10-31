@@ -80,4 +80,14 @@ script:
   - ./bin/test0a
   - ./bin/test0b
   - ./bin/test0c
+  - ./bin/test0
+  - ./bin/test1
+  - ./bin/test2
+  - ./bin/test3
+  - ./bin/test4
+  - ./bin/test5
+  - ./bin/test6
+  - ./bin/test7
+  - ./bin/test8
+  - ./bin/test9
   - make clean

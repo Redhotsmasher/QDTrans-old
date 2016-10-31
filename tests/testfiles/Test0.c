@@ -8,5 +8,9 @@ int main() {
     num++;
     pthread_mutex_unlock(&(lock));
     // Do some more work
-    return 0;
+    if(num == 1) {
+        return 0;
+    } else {
+        return 1;
+    }
 }
