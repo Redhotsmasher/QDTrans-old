@@ -219,7 +219,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    char* fcallstring = malloc(size2 + 12 + 5);
 	    char* fcallstring2 = fcallstring;
 	    *fcallstring = NULL;
-	    if(currvar->pointer == true) {
+	    if(/*currvar->pointer == true*/false) {
 	        sprintf(fcallstring2, "%s(&%s", newfunname, currvar->name);
 		fcallstring2 += (2+strlen(newfunname)+strlen(currvar->name));
 	    } else {
@@ -228,7 +228,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    }
 	    currvar = currvar->next;
 	    while(currvar != NULL) {
-	        if(currvar->pointer == true) {
+	        if(/*currvar->pointer == true*/false) {
 	            sprintf(fcallstring2, ", &%s", currvar->name);
 		    fcallstring2 += (3+strlen(currvar->name));
 		} else {
