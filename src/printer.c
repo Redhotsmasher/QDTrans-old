@@ -123,6 +123,67 @@ char* printNode(struct treeNode* node, CXTranslationUnit cxtup) {
     return currprint;
 }
 
+struct treeNode** generatePrintableList(struct treeNode* node, CXTranslationUnit cxtup) {
+    int count = generatePrintableListRecursive(node, cxtup, NULL, 0);
+    struct treeListNode[] list = malloc(count*sizeof(struct treeListNode*
+}
+
+int generatePrintableListRecursive(struct treeNode* node, CXTranslationUnit cxtup, treeListNode** list, int count) {
+    depth++;
+    if(node->modified == 0) {
+        CXSourceRange range = clang_getCursorExtent(node->cursor);
+        CXSourceLocation rstart = clang_getRangeStart(range);
+        if(clang_Location_isFromMainFile(rstart) != 0) {
+	    enum CXCursorKind cursorkind = clang_getCursorKind(node->cursor);
+	    if(depth == 2 && cursorkind != CXCursor_MacroExpansion) {
+	        nodenum++;
+		/*if(cursorkind == CXCursor_StructDecl) {
+		    CXToken* currTokens;
+		    unsigned int numCurrTokens;
+		    clang_tokenize(cxtup, range, &currTokens, &numCurrTokens);
+		    CXToken token = currTokens[numCurrTokens-1];
+		    CXString tokenstring = clang_getTokenSpelling(cxtup, token);
+		    char* tokenstr = clang_getCString(tokenstring);
+		    clang_disposeTokens(cxtup, currTokens, numCurrTokens);
+		    //printf("\ntoken: %s\n", tokenstr);
+		    if(strcmp(tokenstr, ";")) {
+		        clang_disposeString(tokenstring);
+			// Print nothing, do nothing.
+		    } else {
+		        clang_disposeString(tokenstring);
+			// Add printable
+		    }
+                    } else {*/
+                if(list != NULL) {
+                    list[count] = node;
+                } else {
+                    count++;
+                }
+                //}
+            }
+	}
+    } else if(depth == 2) {
+        if(list != NULL) {
+            list[count] = node;
+        } else {
+            count++;
+        }
+    }
+    if(node->children != NULL) {
+        struct treeListNode* childlist = node->children;
+        while(childlist != NULL) {
+            if(list != NULL) {
+                countPrintableListRecursive(childlist->node, cxtup, list, count);
+            } else {
+                count += countPrintableListRecursive(childlist->node, cxtup, list, count);
+            }
+            childlist = childlist->next;
+        }
+    }
+    depth--;
+    return count;
+}
+
 void printTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
     depth++;
     if(node->modified == 0) {
