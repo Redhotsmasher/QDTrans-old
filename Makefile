@@ -94,7 +94,7 @@ test0c: debug_common.o debug_printer.o debug_qdtrans.o
 
 testzero: debug_main
 	./bin/qdtrans ./tests/testfiles/Test0.c
-	$(CC) tests/testfiles/Test0.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+	$(CC) tests/testfiles/Test0.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test0 -lpthread
 
 test1: debug_main
 	./bin/qdtrans ./tests/testfiles/Test1.c
@@ -102,32 +102,32 @@ test1: debug_main
 
 test2: debug_main
 	./bin/qdtrans ./tests/testfiles/Test2.c
-	$(CC) tests/testfiles/Test2.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+	$(CC) tests/testfiles/Test2.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test2 -lpthread
 
 test3: debug_main
 	./bin/qdtrans ./tests/testfiles/Test3.c
-	$(CC) tests/testfiles/Test3.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+	$(CC) tests/testfiles/Test3.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test3 -lpthread
 
 test4: debug_main
 	./bin/qdtrans ./tests/testfiles/Test4.c
-	$(CC) tests/testfiles/Test4.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+	$(CC) tests/testfiles/Test4.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test4 -lpthread
 
 test5: debug_main
 	./bin/qdtrans ./tests/testfiles/Test5.c
-	$(CC) tests/testfiles/Test5.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+	$(CC) tests/testfiles/Test5.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test5 -lpthread
 
 test6: debug_main
 	./bin/qdtrans ./tests/testfiles/Test6.c
-	$(CC) tests/testfiles/Test6.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+	$(CC) tests/testfiles/Test6.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test6 -lpthread
 
 test7: debug_main
 	./bin/qdtrans ./tests/testfiles/Test7.c
-	$(CC) tests/testfiles/Test7.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+	$(CC) tests/testfiles/Test7.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test7 -lpthread
 
 test8: debug_main
 	./bin/qdtrans ./tests/testfiles/Test8.c
-	$(CC) tests/testfiles/Test8.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+	$(CC) tests/testfiles/Test8.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test8 -lpthread
 
 test9: debug_main
 	./bin/qdtrans ./tests/testfiles/Test9.c
-	$(CC) tests/testfiles/Test9.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test1 -lpthread
+	$(CC) tests/testfiles/Test9.qd.c -O$(DOPTLEV) $(DFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/test9 -lpthread
