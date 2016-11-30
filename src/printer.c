@@ -261,22 +261,31 @@ void printTreeIterative(CXTranslationUnit cxtup, struct treeNode** nodelist, int
                             
                             if(i == numTokens-1) {
                                 int m = n+1;
-                                while(nodelist[m]->validcursor == false && m < count) {
+                                while(m < count && nodelist[m]->validcursor == false) {
                                     m++;
                                 }
-                                if(nodelist[m]->validcursor == true) {
+                                if(m < count && nodelist[m]->validcursor == true) {
                                     CXSourceRange nrange = clang_getCursorExtent(nodelist[m]->cursor);
                                     CXToken* ntokens;
                                     unsigned int nnumTokens;
-                                    clang_tokenize(cxtup, range, &ntokens, &nnumTokens);
+                                    clang_tokenize(cxtup, nrange, &ntokens, &nnumTokens);
                                     CXSourceRange ntokenrange = clang_getTokenExtent(cxtup, ntokens[0]);
+				    //CXSourceLocation nrstart = clang_getRangeStart(ntokenrange);
                                     CXSourceLocation nrend = clang_getRangeEnd(ntokenrange);
+				    //CXSourceLocation ntloc = clang_getTokenLocation (cxtup, ntokens[0]);
+				    //unsigned* nstartline = malloc(sizeof(unsigned));
+                                    //unsigned* nstartcol = malloc(sizeof(unsigned));
                                     unsigned* nendline = malloc(sizeof(unsigned));
                                     unsigned* nendcol = malloc(sizeof(unsigned));
+				    /*CXSourceLocation tloc = clang_getTokenLocation (cxtup, tokens[i]);
+				    unsigned* tline = malloc(sizeof(unsigned));
+                                    unsigned* tcol = malloc(sizeof(unsigned));*/
+				    //clang_getFileLocation(tloc, NULL, tline, tcol, NULL);
                                     clang_getFileLocation(nrend, NULL, nendline, nendcol, NULL);
-                                    CXString ntstring = clang_getTokenSpelling(cxtup, ntokens[0]);
-                                    printf("%u == %u (%u), %u == %u, (%u)\n", *nendline, *endline, *startline, *nendcol, *endcol, *startcol);
-                                    char* ntstr = clang_getCString(tokenstring);
+				    //clang_getFileLocation(ntloc, NULL, nstartline, nstartcol, NULL);
+                                    /*CXString ntstring = clang_getTokenSpelling(cxtup, ntokens[0]);
+				    char* ntstr = clang_getCString(ntstring);
+                                    printf("[%i:%i]%u (%u) == %u (%u), %u (%u) == %u (%u), \"%s\" == \"%s\"\n", n, m, *nendline, *nstartline, *endline, *tline, *nendcol, *nstartcol, *endcol, *tcol, ntstr, tstr);*/
                                     if(*nendline == *endline && *nendcol == *endcol) {
                                         prevmodded = true;
                                         // Prevent later deduplication, print nothing.
@@ -284,11 +293,18 @@ void printTreeIterative(CXTranslationUnit cxtup, struct treeNode** nodelist, int
                                         prevmodded = false;
                                         printf("%s", tstr);
                                     }
-                                    free(nendcol);
+				    //free(tcol);
+                                    //free(tline);
+				    free(nendcol);
                                     free(nendline);
-                                    clang_disposeString(ntstring);
+                                    //free(nstartcol);
+                                    //free(nstartline);
+                                    //clang_disposeString(ntstring);
                                     clang_disposeTokens(cxtup, ntokens, nnumTokens);
-                                }
+                                } else {
+				    prevmodded = false;
+				    printf("%s", tstr);
+				}
                             } else if(i == 0 && *endline == prevline && *endcol == prevcol && prevmodded == false) {	    
                                 // Do nothing, print nothing.
                             } else {
