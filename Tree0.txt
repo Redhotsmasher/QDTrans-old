@@ -1,0 +1,30 @@
+CXCursor_TranslationUnit([300]): "./tests/testfiles/Test0.c"; ./tests/testfiles/Test0.c (L1:C1-L13:C1), containing 45 tokens (# include < pthread . h > int main ( ) { pthread_mutex_t lock ; int num = 0 ; // Do some work pthread_mutex_lock ( & ( lock ) ) ; num ++ ; pthread_mutex_unlock ( & ( lock ) ) ; // Do some more work return 0 ; } )->
+  CXCursor_InclusionDirective([503]): "pthread.h"; pthread.h (L1:C1-L1:C21), containing 8 tokens (# include < pthread . h > int )
+  CXCursor_FunctionDecl([8]):int () "main()"; main (L3:C1-L12:C2), containing 38 tokens (int main ( ) { pthread_mutex_t lock ; int num = 0 ; // Do some work pthread_mutex_lock ( & ( lock ) ) ; num ++ ; pthread_mutex_unlock ( & ( lock ) ) ; // Do some more work return 0 ; } )->
+    CXCursor_CompoundStmt([202]): "";  (L3:C12-L12:C2), containing 34 tokens ({ pthread_mutex_t lock ; int num = 0 ; // Do some work pthread_mutex_lock ( & ( lock ) ) ; num ++ ; pthread_mutex_unlock ( & ( lock ) ) ; // Do some more work return 0 ; } )->
+      CXCursor_DeclStmt([231]): "";  (L4:C5-L4:C26), containing 4 tokens (pthread_mutex_t lock ; int )->
+        CXCursor_VarDecl([9]):pthread_mutex_t "lock"; lock (L4:C5-L4:C25), containing 3 tokens (pthread_mutex_t lock ; )->
+          CXCursor_TypeRef([43]):pthread_mutex_t "pthread_mutex_t"; pthread_mutex_t (L4:C5-L4:C20), containing 2 tokens (pthread_mutex_t lock )
+      CXCursor_DeclStmt([231]): "";  (L5:C5-L5:C17), containing 6 tokens (int num = 0 ; // Do some work )->
+        CXCursor_VarDecl([9]):int "num"; num (L5:C5-L5:C16), containing 5 tokens (int num = 0 ; )->
+          CXCursor_IntegerLiteral([106]):int "";  (L5:C15-L5:C16), containing 2 tokens (0 ; )
+      CXCursor_CallExpr([103]):int "pthread_mutex_lock"; pthread_mutex_lock (L7:C5-L7:C32), containing 8 tokens (pthread_mutex_lock ( & ( lock ) ) ; )->
+        CXCursor_UnexposedExpr([100]):int (*)(pthread_mutex_t *) "pthread_mutex_lock"; pthread_mutex_lock (L7:C5-L7:C23), containing 2 tokens (pthread_mutex_lock ( )->
+          CXCursor_DeclRefExpr([101]):int (pthread_mutex_t *) "pthread_mutex_lock"; pthread_mutex_lock (L7:C5-L7:C23), containing 2 tokens (pthread_mutex_lock ( )
+        CXCursor_UnaryOperator([112]):pthread_mutex_t * "";  (L7:C24-L7:C31), containing 5 tokens (& ( lock ) ) )->
+          CXCursor_ParenExpr([111]):pthread_mutex_t "";  (L7:C25-L7:C31), containing 4 tokens (( lock ) ) )->
+            CXCursor_DeclRefExpr([101]):pthread_mutex_t "lock"; lock (L7:C26-L7:C30), containing 2 tokens (lock ) )
+      CXCursor_UnaryOperator([112]):int "";  (L8:C5-L8:C10), containing 3 tokens (num ++ ; )->
+        CXCursor_DeclRefExpr([101]):int "num"; num (L8:C5-L8:C8), containing 2 tokens (num ++ )
+      CXCursor_CallExpr([103]):int "pthread_mutex_unlock"; pthread_mutex_unlock (L9:C5-L9:C34), containing 8 tokens (pthread_mutex_unlock ( & ( lock ) ) ; )->
+        CXCursor_UnexposedExpr([100]):int (*)(pthread_mutex_t *) "pthread_mutex_unlock"; pthread_mutex_unlock (L9:C5-L9:C25), containing 2 tokens (pthread_mutex_unlock ( )->
+          CXCursor_DeclRefExpr([101]):int (pthread_mutex_t *) "pthread_mutex_unlock"; pthread_mutex_unlock (L9:C5-L9:C25), containing 2 tokens (pthread_mutex_unlock ( )
+        CXCursor_UnaryOperator([112]):pthread_mutex_t * "";  (L9:C26-L9:C33), containing 5 tokens (& ( lock ) ) )->
+          CXCursor_ParenExpr([111]):pthread_mutex_t "";  (L9:C27-L9:C33), containing 4 tokens (( lock ) ) )->
+            CXCursor_DeclRefExpr([101]):pthread_mutex_t "lock"; lock (L9:C28-L9:C32), containing 2 tokens (lock ) )
+      CXCursor_ReturnStmt([214]): "";  (L11:C5-L11:C13), containing 3 tokens (return 0 ; )->
+        CXCursor_IntegerLiteral([106]):int "";  (L11:C12-L11:C13), containing 2 tokens (0 ; )
+
+Error Code: 0
+Total nodes: 1709
+Maximum depth: 7

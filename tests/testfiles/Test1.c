@@ -11,17 +11,11 @@ typedef struct{
 sem_t sem;
 SharedInt* sip;
 
-void plus(int* v2) {
+void *functionWithCriticalSection(int* v2) {
+    // Do some work
     pthread_mutex_lock(&(sip->lock));
     sip->value = sip->value + *v2;
     pthread_mutex_unlock(&(sip->lock));
-}
-
-void *functionWithCriticalSection(int* v2) {
-    // Do some work
-    	// Critical section
-        plus(v2);
-        // End of critical section
     // Do some more work
     sem_post(&sem);
 }
@@ -42,5 +36,5 @@ int main() {
     pthread_mutex_destroy(&(sip->lock));
     sem_destroy(&sem);
     printf("%d\n", sip->value); // Should print "2".
-    return 0;
+    return sip->value-2;
 }

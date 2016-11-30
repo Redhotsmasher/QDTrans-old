@@ -1,0 +1,93 @@
+language: c
+install: true
+matrix:
+  include:
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.6
+          packages:
+            - gcc-4.9
+            - clang-3.6
+            - libclang-common-3.6-dev
+            - libclang-3.6-dev
+            - libclang1-3.6
+            - libclang1-3.6-dbg
+            - libllvm-3.6
+      env: COMPILER=gcc-4.9 LCLANG="-Xlinker --library-path=/usr/lib/llvm-3.6/lib/ -lclang-3.6"
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.6
+          packages:
+            - gcc-5
+            - clang-3.6
+            - libclang-common-3.6-dev
+            - libclang-3.6-dev
+            - libclang1-3.6
+            - libclang1-3.6-dbg
+            - libllvm-3.6
+      env: COMPILER=gcc-5 LCLANG="-Xlinker --library-path=/usr/lib/llvm-3.6/lib/ -lclang-3.6"
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.6
+          packages:
+            - clang-3.6
+            - libclang-common-3.6-dev
+            - libclang-3.6-dev
+            - libclang1-3.6
+            - libclang1-3.6-dbg
+            - libllvm-3.6
+      env: COMPILER=clang-3.6 LCLANG="-Xlinker --library-path=/usr/lib/llvm-3.6/lib/ -lclang"
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.7
+          packages:
+            - clang-3.7
+            - libclang-common-3.7-dev
+            - libclang-3.7-dev
+            - libclang1-3.7
+            - libclang1-3.7-dbg
+            - libllvm-3.7
+      env: COMPILER=clang-3.7 LCLANG=-lclang
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - clang-3.8
+            - libclang-common-3.8-dev
+            - libclang-3.8-dev
+            - libclang1-3.8
+            - libclang1-3.8-dbg
+            - libllvm-3.8
+      env: COMPILER=clang-3.8 LCLANG=-lclang
+script:
+  - ld --verbose
+  - make tests
+  - ./bin/test0a
+  - ./bin/test0b
+  - ./bin/test0c
+  - ./bin/test0
+  - ./bin/test1
+  - ./bin/test2
+  - ./bin/test3
+  - ./bin/test4
+  - ./bin/test5
+  - ./bin/test6
+  - ./bin/test7
+  - ./bin/test8
+  - ./bin/test9
+  - make clean

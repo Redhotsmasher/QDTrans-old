@@ -1,6 +1,6 @@
 #ifndef QDTRANS_COMMON
 #define QDTRANS_COMMON
-#include <clang-c/Index.h>
+#include "clang-c/Index.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -69,5 +69,7 @@ struct treeNode* getChild(struct treeNode* node, int childNum);
 struct nodeTree* generateTree(char* filename);
 
 void disposeTree(struct nodeTree* tree);
+
+int debugNode2(struct treeNode* node, CXTranslationUnit cxtup);
 
 #endif /* QDTRANS_COMMON */

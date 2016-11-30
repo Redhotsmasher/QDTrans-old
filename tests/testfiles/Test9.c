@@ -13,36 +13,33 @@ sem_t sem;
 void *functionWithCriticalSection(int* v2) {
     // Do some work
     pthread_mutex_lock(&(lock));
-    value = value + *v2;
-    pthread_mutex_unlock(&(lock));
-    // Do some more work
-    sem_post(&sem);
-}
-
-void *functionWithOtherCriticalSection(int* v2) {
-    // Do some work
-    pthread_mutex_lock(&(lock2));
-    value2 = value2 + *v2;
-    pthread_mutex_unlock(&(lock2));
-    // Do some more work
-    sem_post(&sem);
-}
-
-void *functionWithMultilockCriticalSection(int* v2) {
-    // Do some work
-    pthread_mutex_lock(&(lock));
     pthread_mutex_lock(&(lock2));
     value = value2 + *v2;
-    pthread_mutex_unlock(&(lock));
+    value2 = value;
     pthread_mutex_unlock(&(lock2));
+    pthread_mutex_unlock(&(lock));
     // Do some more work
     sem_post(&sem);
 }
 
-void *functionWithReadingCriticalSection(int* v2) {
+void *otherFunctionWithCriticalSection(int* v2) {
+    // Do some work
+    if (v2 != 0) {
+        pthread_mutex_lock(&(lock));
+        pthread_mutex_lock(&(lock2));
+        value = value2 + 1;
+	value2 = value;
+        pthread_mutex_unlock(&(lock2));
+        pthread_mutex_unlock(&(lock));
+    }
+    // Do some more work
+    sem_post(&sem);
+}
+
+void *thirdFunctionWithCriticalSection(int* v2) {
     // Do some work
     pthread_mutex_lock(&(lock));
-    printf("%d\n", value);
+    value = value + 1;
     pthread_mutex_unlock(&(lock));
     // Do some more work
     sem_post(&sem);
@@ -52,23 +49,22 @@ int main() {
     sem_init(&sem, 0, 0);
     value = 0;
     value2 = 0;
-    int v2 = 1;
-    pthread_mutex_init((&(lock)), NULL);
-    pthread_mutex_init((&(lock2)), NULL);
+    int v2 = 2;
+    pthread_mutex_init(&(lock), NULL);
+    pthread_mutex_init(&(lock2), NULL);
     pthread_t thread1;
     pthread_t thread2;
     pthread_create (&thread1,NULL,functionWithCriticalSection,&v2);
-    pthread_create (&thread2,NULL,functionWithOtherCriticalSection,&v2);
+    pthread_create (&thread2,NULL,otherFunctionWithCriticalSection,&v2);
     sem_wait(&sem);
     sem_wait(&sem);
-    pthread_create (&thread1,NULL,functionWithMultilockCriticalSection,&v2);
-    pthread_create (&thread2,NULL,functionWithReadingCriticalSection,&v2);
+    pthread_create (&thread1,NULL,thirdFunctionWithCriticalSection,&v2);
+    pthread_create (&thread2,NULL,thirdFunctionWithCriticalSection,&v2);
     sem_wait(&sem);
     sem_wait(&sem);
     pthread_mutex_destroy(&(lock));
     pthread_mutex_destroy(&(lock2));
     sem_destroy(&sem);
-    printf("%d\n", value); // Should print "2".
-    printf("%d\n", value2); // Should print "1".
-    return 0;
+    printf("%d\n", value); // Should print "5".
+    return value-5;
 }

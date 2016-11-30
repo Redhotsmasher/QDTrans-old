@@ -36,15 +36,6 @@ void *otherFunctionWithCriticalSection(int* v2) {
     sem_post(&sem);
 }
 
-void *thirdFunctionWithCriticalSection(int* v2) {
-    // Do some work
-    pthread_mutex_lock(&(lock));
-    value = value + 1;
-    pthread_mutex_unlock(&(lock));
-    // Do some more work
-    sem_post(&sem);
-}
-
 int main() {
     sem_init(&sem, 0, 0);
     value = 0;
@@ -58,13 +49,9 @@ int main() {
     pthread_create (&thread2,NULL,otherFunctionWithCriticalSection,&v2);
     sem_wait(&sem);
     sem_wait(&sem);
-    pthread_create (&thread1,NULL,thirdFunctionWithCriticalSection,&v2);
-    pthread_create (&thread2,NULL,thirdFunctionWithCriticalSection,&v2);
-    sem_wait(&sem);
-    sem_wait(&sem);
     pthread_mutex_destroy(&(lock));
     pthread_mutex_destroy(&(lock2));
     sem_destroy(&sem);
-    printf("%d\n", value); // Should print "5".
-    return 0;
+    printf("%d\n", value); // Should print "3".
+    return value-3;
 }

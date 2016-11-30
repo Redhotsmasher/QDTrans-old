@@ -66,5 +66,5 @@ int main() {
     pthread_mutex_destroy(&(lock2));
     sem_destroy(&sem);
     printf("%d\n", value); // Should print "5".
-    return 0;
+    return value-5;
 }
