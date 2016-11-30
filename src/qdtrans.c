@@ -126,7 +126,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 		currnode = currnode->next;
 	    }
 	    nodeCount++; // For unlock node, technically part of "nodesafter".
-	    char** nodestrings[nodeCount];
+	    char* nodestrings[nodeCount];
 	    currnode = currcrit->nodelist;
 	    for(int i = 0; i < (nodeCount-1); i++) {
 	      /*char* asdf = "asdf\n";
