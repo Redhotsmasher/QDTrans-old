@@ -248,6 +248,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    }
 	    printf("%s\n", varstringafter);
 	    printf("\n}\n"); //"funend"
+            printf("\n\n---\n\n");
 	    struct treeNode* currnode2 = currcrit->nodelist->node;
 	    struct treeNode* locknode = currnode2;
             clearNode(currcrit->nodelist);
@@ -682,7 +683,7 @@ void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
     depth--;
 }
 
-void scanTree(struct treeNode* node, CXTranslationUnit cxtup) {
+void scanTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
   depth++;
     if(node->modified == 0) {
         CXSourceRange range = clang_getCursorExtent(node->cursor);
