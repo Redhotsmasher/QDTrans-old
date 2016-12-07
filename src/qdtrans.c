@@ -683,6 +683,70 @@ void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
     depth--;
 }
 
+int scannodes = 0;
+
+struct treeListNode* scanlist = NULL;
+
+void scanTreeIterative(CXTranslationUnit cxtup);
+
+void scanTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup);
+
+void scanTree(struct treeNode* node, CXTranslationUnit cxtup) {
+    scanTreeRecursive(node, cxtup);
+    scanTreeIterative(cxtup);
+}
+
+void scanTreeIterative(CXTranslationUnit cxtup) {
+    struct treeListNode* currnode = scanlist;
+    struct treeNode** scanarray = malloc(scannodes*sizeof(struct treeNode));
+    int n = 0;
+    while(currnode != NULL && currnode->next != NULL) {
+        scanarray[n] = currnode->node;
+        currnode = currnode->next;
+    }
+    currnode = scanlist;
+    struct treeListNode* next = currnode;
+    while(next != NULL) {
+        currnode = next;
+	next = currnode->next;
+	free(currnode);
+    }
+    for(int i = 0; i < scannodes; i++) {
+        struct treeNode* newnode = malloc(sizeof(struct treeNode));
+	newnode->validcursor = false;
+	newnode->childCount = 0;
+	newnode->children = NULL;
+	newnode->modified = 1;
+	newnode->startline = -1;
+	newnode->startcol = -1;
+	CXString cdisplaystring = clang_getCursorDisplayName(scanarray[i]->cursor);
+	char* str = clang_getCString(cdisplaystring);
+	//printf("Node's CursorDisplayName is \"%s\"\n", str);
+	bool start = (strcmp(str, &("pthread_mutex_lock")) == 0);
+	bool end = (strcmp(str, &("pthread_mutex_unlock")) == 0);
+	/*CXSourceLocation endloc = clang_getRangeEnd(range);
+	  unsigned eline;
+	  unsigned ecolumn;
+	  clang_getFileLocation(endloc, NULL, &eline, &ecolumn, NULL);
+	  //printf("node: %i, eline: %i, ecolumn: %i\n", newnode, eline, ecolumn);
+	  newnode->startline = eline;
+	  newnode->startcol = ecolumn;*/
+	if(start) {
+	  //printf("--START--\n");
+	    newnode->newContent = malloc(7*sizeof(char));
+	    strcpy(newnode->newContent, &"\nstart");
+	    addChildBefore(scanarray[i]->parent, newnode, scanarray[i], cxtup);
+	  //dNode = newnode;
+	} else {
+	  //printf("---END---\n");
+	    newnode->newContent = malloc(5*sizeof(char));
+	    strcpy(newnode->newContent, &"\nend");
+	    addChildBefore(scanarray[i]->parent, newnode, scanarray[i], cxtup); 
+	}
+    //newnode->parent = node->parent;
+    }
+}
+
 void scanTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
   depth++;
     if(node->modified == 0) {
@@ -699,7 +763,7 @@ void scanTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 		bool end = (strcmp(str, &("pthread_mutex_unlock")) == 0);
 	      //printf("%i, %i\n", start, end);
 		if(start || end) {
-		    struct treeNode* newnode = malloc(sizeof(struct treeNode));
+		  /*struct treeNode* newnode = malloc(sizeof(struct treeNode));
 		    newnode->validcursor = false;
 		    newnode->childCount = 0;
 		    newnode->children = NULL;
@@ -713,7 +777,7 @@ void scanTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 		    //printf("node: %i, eline: %i, ecolumn: %i\n", newnode, eline, ecolumn);
 		    newnode->startline = eline;
 		    newnode->startcol = ecolumn;*/
-                    if(start) {
+                    /*if(start) {
 		      //printf("--START--\n");
 		        newnode->newContent = malloc(7*sizeof(char));
 			strcpy(newnode->newContent, &"\nstart");
@@ -724,8 +788,21 @@ void scanTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
 		        newnode->newContent = malloc(5*sizeof(char));
 			strcpy(newnode->newContent, &"\nend");
 			addChildBefore(node->parent, newnode, node, cxtup); 
-		    }
+		    }*/
 		    //newnode->parent = node->parent;
+		    scannodes++;
+		    struct treeListNode* newnode = malloc(sizeof(struct treeListNode));
+		    newnode->node = node;
+		    newnode->next = NULL;
+		    if(scanlist == NULL) {
+		        scanlist = newnode;
+		    } else {
+		        struct treeListNode* currnode = scanlist;
+		        while(currnode != NULL && currnode->next != NULL) {
+			    currnode = currnode->next;
+		        }
+			currnode->next = newnode;
+		    }
 		}
 		clang_disposeString(cdisplaystring);
 	    }
@@ -734,7 +811,7 @@ void scanTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
     if(node->children != NULL) {
         struct treeListNode* childlist = node->children;
 	while(childlist != NULL) {
-	    scanTree(childlist->node, cxtup);
+	    scanTreeRecursive(childlist->node, cxtup);
 	    childlist = childlist->next;
 	}
     }
