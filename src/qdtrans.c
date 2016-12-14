@@ -762,7 +762,11 @@ void scanTreeIterative(CXTranslationUnit cxtup) {
                 struct treeNode* unlocknode = nodelist->node->children->next->node->children->node->children->node;
                 boolean braek = false;
                 for(int i = 0; locklist[i] != NULL; i++) {
-                    struct treeNode* locknode
+                    struct treeNode* locknode = locklist[i]->node->children->next->node->children->node->children->node;
+		    if(clang_equalCursors(clang_getCursorReferenced(unlocknode->cursor), clang_getCursorReferenced(locknode->cursor))) {
+		        braek = true;
+			
+		    }
                 }
             }
             currnode = currnode->next;
