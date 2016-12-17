@@ -715,13 +715,6 @@ void scanTreeIterative(CXTranslationUnit cxtup) {
     }
     printf("---\n");
     for(int i = 0; i < scannodes; i++) {
-        struct treeNode* newnode = malloc(sizeof(struct treeNode));
-	newnode->validcursor = false;
-	newnode->childCount = 0;
-	newnode->children = NULL;
-	newnode->modified = 1;
-	newnode->startline = -1;
-	newnode->startcol = -1;
         printf("[%i]: 0x%lX\n", i, scanarray[i]);
 	CXString cdisplaystring = clang_getCursorDisplayName(scanarray[i]->cursor);
 	char* str = clang_getCString(cdisplaystring);
@@ -760,34 +753,54 @@ void scanTreeIterative(CXTranslationUnit cxtup) {
             if(strcmp(str2, &("pthread_mutex_unlock")) == 0) {
                 i++;
                 struct treeNode* unlocknode = nodelist->node->children->next->node->children->node->children->node;
-                boolean braek = false;
+                bool braek = false;
                 for(int i = 0; locklist[i] != NULL; i++) {
-                    struct treeNode* locknode = locklist[i]->node->children->next->node->children->node->children->node;
+                    struct treeNode* locknode = locklist[i]->children->next->node->children->node->children->node;
 		    if(clang_equalCursors(clang_getCursorReferenced(unlocknode->cursor), clang_getCursorReferenced(locknode->cursor))) {
 		        braek = true;
-			
+                        struct treeNode* newnode = malloc(sizeof(struct treeNode));
+                        newnode->validcursor = false;
+                        newnode->childCount = 0;
+                        newnode->children = NULL;
+                        newnode->modified = 1;
+                        newnode->startline = -1;
+                        newnode->startcol = -1;
+                        newnode->newContent = malloc(7*sizeof(char));
+                        strcpy(newnode->newContent, &"\nstart");
+                        addChildBefore(locknode->parent, newnode, locknode, cxtup);
+                        newnode = malloc(sizeof(struct treeNode));
+                        newnode->validcursor = false;
+                        newnode->childCount = 0;
+                        newnode->children = NULL;
+                        newnode->modified = 1;
+                        newnode->startline = -1;
+                        newnode->startcol = -1;
+                        newnode->newContent = malloc(5*sizeof(char));
+                        strcpy(newnode->newContent, &"\nend");
+                        addChildBefore(unlocknode->parent, newnode, unlocknode, cxtup);
+                        for(int j = 0; clang_equalCursors(locklist[j]->cursor, locknode->cursor) != 0; j++) {
+                            newnode = malloc(sizeof(struct treeNode));
+                            newnode->childCount = 0;
+                            newnode->children = NULL;
+                            newnode->modified = 1;
+                            newnode->newContent = printNode(locklist[j], cxtup);
+                            newnode->modifiedNodes = NULL;
+                            newnode->validcursor = false;
+                            addChildBefore(locknode->parent, newnode, locknode, cxtup);
+                            clearNode(locklist[j]);
+                        }
 		    }
+                    if(braek == true) {
+                        break;
+                    }
                 }
             }
             currnode = currnode->next;
         }
-        //debugNode(scanarray[i], cxtup);
-	if(start) {
-	  //printf("--START--\n");
-	    newnode->newContent = malloc(7*sizeof(char));
-	    strcpy(newnode->newContent, &"\nstart");
-	    addChildBefore(scanarray[i]->parent, newnode, scanarray[i], cxtup);
-	  //dNode = newnode;
-	} else {
-	  //printf("---END---\n");
-	    newnode->newContent = malloc(5*sizeof(char));
-	    strcpy(newnode->newContent, &"\nend");
-	    addChildBefore(scanarray[i]->parent, newnode, scanarray[i], cxtup); 
-	}
+        free(locklist);
     //newnode->parent = node->parent;
     }
     free(scanarray);
-    free(locklist);
 }
 
 void scanTreeRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
