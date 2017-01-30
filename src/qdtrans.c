@@ -274,15 +274,17 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    clearNode(currcrit->nodesafter);
 	    currnode = tree->root->children;
 	    CXSourceRange drange = clang_getCursorExtent(node->cursor);
-	    CXSourceLocation drstart = clang_getRangeStart(drange);
-	    while(clang_getCursorKind(currnode->node->cursor) != CXCursor_FunctionDecl || clang_Location_isFromMainFile(drstart) == 0) {
+            CXSourceLocation drstart = clang_getRangeStart(drange);
+	    while(currnode->node->validcursor == false || clang_getCursorKind(currnode->node->cursor) != CXCursor_FunctionDecl || clang_Location_isFromMainFile(drstart) == 0) {
 	        currnode = currnode->next;
-		drange = clang_getCursorExtent(currnode->node->cursor);
-		drstart = clang_getRangeStart(drange);
+                if(currnode->node->validcursor == true) {
+                    drange = clang_getCursorExtent(currnode->node->cursor);
+                    drstart = clang_getRangeStart(drange);
+                }
 	    }
-	    /*printf("\nASDFGHJKLÖÄ\n\n");
+	    printf("\nÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ\n\n");
 	    debugNode(currnode->node, tree->cxtup);
-	    printf("\nQEWADSZX\n\n");
+	    /*printf("\nQEWADSZX\n\n");
 	    debugNode(currnode->node->parent, tree->cxtup);*/
 	    struct treeNode* newNode = malloc(sizeof(struct treeNode));
 	    newNode->childCount = 0;
@@ -725,93 +727,118 @@ void scanTreeIterative(CXTranslationUnit cxtup) {
 	bool end = (strcmp(str, &("pthread_mutex_unlock")) == 0);
         printf("(%i|%i)\n", start, end);
         clang_disposeString(cdisplaystring);
-        struct treeNode** locklist = calloc(1, scannodes*sizeof(struct treeNode));
-        struct treeListNode* nodelist = scanarray[i]->parent->children;
-        while(nodelist != NULL) {
-            if(clang_equalCursors(nodelist->node->cursor, scanarray[i]->cursor)) {
-                break;
-            } else {
-                nodelist = nodelist->next;
+        if(start == true) {
+            struct treeNode** locklist = calloc(1, scannodes*sizeof(struct treeNode));
+            struct treeListNode* nodelist = scanarray[i]->parent->children;
+            while(nodelist != NULL) {
+                if(nodelist->node->validcursor == true && clang_equalCursors(nodelist->node->cursor, scanarray[i]->cursor)) {
+                    break;
+                } else {
+                    nodelist = nodelist->next;
+                }
             }
-        }
-        //locklist[0] = scanarray[i];
-        n = 1;
-        currnode = nodelist;
-        locklist[0] = currnode->node;
-        while(currnode->next != NULL) {
-            printf("KUKEN");
-            CXString cdisplaystring2 = clang_getCursorDisplayName(currnode->next->node->cursor);
-            char* str2 = clang_getCString(cdisplaystring2);
-            printf("str2: \"%s\"\n", str2);
-            if(strcmp(str2, &("pthread_mutex_lock")) == 0) {
-                locklist[n] = currnode->next->node;
+            //locklist[0] = scanarray[i];
+            n = 1;
+            currnode = nodelist;
+            locklist[0] = currnode->node;
+            while(currnode->next != NULL) {
+                printf("KUKEN");
+                CXString cdisplaystring2 = clang_getCursorDisplayName(currnode->next->node->cursor);
+                char* str2 = clang_getCString(cdisplaystring2);
+                printf("str2: \"%s\"\n", str2);
+                if(strcmp(str2, &("pthread_mutex_lock")) == 0) {
+                    locklist[n] = currnode->next->node;
+                    n++;
+                    i++;
+                    currnode = currnode->next;
+                } else {
+                    break;
+                }
+            }
+            currnode = nodelist;
+            bool braek = false;
+            n = 0;
+            while(currnode != NULL) {
                 n++;
-                //i++;
                 currnode = currnode->next;
-            } else {
-                break;
             }
-        }
-        currnode = nodelist;
-        while(currnode->next != NULL) {
-            CXString cdisplaystring2 = clang_getCursorDisplayName(currnode->node->cursor);
-            char* str2 = clang_getCString(cdisplaystring2);
-            if(strcmp(str2, &("pthread_mutex_unlock")) == 0) {
-                i++;
-                struct treeNode* unlocknode = currnode->node->children->next->node->children->node->children->node;
-                bool braek = false;
-                printf("%lX\n", locklist[0]);
-                for(int i = 0; locklist[i] != NULL; i++) {
-                    struct treeNode* locknode = locklist[i]->children->next->node->children->node->children->node;
-		    if(clang_equalCursors(clang_getCursorReferenced(unlocknode->cursor), clang_getCursorReferenced(locknode->cursor))) {
-		        braek = true;
-                        struct treeNode* newnode = malloc(sizeof(struct treeNode));
-                        newnode->validcursor = false;
-                        newnode->childCount = 0;
-                        newnode->children = NULL;
-                        newnode->modified = 1;
-                        newnode->startline = -1;
-                        newnode->startcol = -1;
-                        newnode->newContent = malloc(7*sizeof(char));
-                        strcpy(newnode->newContent, &"\nstart");
-                        addChildBefore(locklist[i]->parent, newnode, locklist[i], cxtup);
-                        newnode = malloc(sizeof(struct treeNode));
-                        newnode->validcursor = false;
-                        newnode->childCount = 0;
-                        newnode->children = NULL;
-                        newnode->modified = 1;
-                        newnode->startline = -1;
-                        newnode->startcol = -1;
-                        newnode->newContent = malloc(5*sizeof(char));
-                        strcpy(newnode->newContent, &"\nend");
-                        addChildBefore(currnode->node->parent, newnode, currnode->node, cxtup);
-                        for(int j = 0; clang_equalCursors(locklist[j]->cursor, locknode->cursor) != 0; j++) {
-                            newnode = malloc(sizeof(struct treeNode));
+            struct treeNode** scanarray2 = malloc(n*sizeof(struct treeNode));
+            currnode = nodelist;
+            int scanarray2size = n;
+            while(currnode != NULL) {
+                scanarray2[n-1] = currnode->node;
+                printf("[%i]: 0x%lX\n", n-1, scanarray2[n-1]);
+                //debugNode(scanarray2[n-1], cxtup);
+                currnode = currnode->next;
+                n--;
+            }
+            for(int i = 0; i < scanarray2size; i++) {
+                struct treeListNode* currnode = malloc(sizeof(struct treeListNode));
+                currnode->node = scanarray2[i];
+                CXString cdisplaystring2 = clang_getCursorDisplayName(currnode->node->cursor);
+                char* str2 = clang_getCString(cdisplaystring2);
+                printf("istr2: \"%s\"\n", str2);
+                if(strcmp(str2, &("pthread_mutex_unlock")) == 0) {
+                    printf("Node matched!\n");
+                    i++;
+                    struct treeNode* unlocknode = currnode->node->children->next->node->children->node->children->node;
+                    printf("%lX\n", locklist[0]);
+                    for(int i = 0; locklist[i] != NULL; i++) {
+                        struct treeNode* locknode = locklist[i]->children->next->node->children->node->children->node;
+                        if(clang_equalCursors(clang_getCursorReferenced(unlocknode->cursor), clang_getCursorReferenced(locknode->cursor))) {
+                            braek = true;
+                            struct treeNode* newnode = malloc(sizeof(struct treeNode));
+                            newnode->validcursor = false;
                             newnode->childCount = 0;
                             newnode->children = NULL;
                             newnode->modified = 1;
-                            newnode->newContent = printNode(locklist[j], cxtup);
-                            newnode->modifiedNodes = NULL;
+                            newnode->startline = -1;
+                            newnode->startcol = -1;
+                            newnode->newContent = malloc(7*sizeof(char));
+                            strcpy(newnode->newContent, &"\nstart");
+                            addChildBefore(locklist[0]->parent, newnode, locklist[0], cxtup);
+                            newnode = malloc(sizeof(struct treeNode));
                             newnode->validcursor = false;
-                            addChildBefore(locknode->parent, newnode, locknode, cxtup);
-                            clearNode(locklist[j]);
+                            newnode->childCount = 0;
+                            newnode->children = NULL;
+                            newnode->modified = 1;
+                            newnode->startline = -1;
+                            newnode->startcol = -1;
+                            newnode->newContent = malloc(5*sizeof(char));
+                            strcpy(newnode->newContent, &"\nend");
+                            addChildBefore(currnode->node->parent, newnode, currnode->node, cxtup);
+                            for(int j = 0; clang_equalCursors(locklist[j]->cursor, locknode->cursor) != 0; j++) {
+                                newnode = malloc(sizeof(struct treeNode));
+                                newnode->childCount = 0;
+                                newnode->children = NULL;
+                                newnode->modified = 1;
+                                newnode->newContent = printNode(locklist[j], cxtup);
+                                newnode->modifiedNodes = NULL;
+                                newnode->validcursor = false;
+                                addChildBefore(locknode->parent, newnode, locknode, cxtup);
+                                clearNode(locklist[j]);
+                            }
+                        } else {
+                            printf("%lX == %lX\n", clang_getCursorReferenced(unlocknode->cursor), clang_getCursorReferenced(locknode->cursor));
+                            debugNode(locknode, cxtup);
+                            debugNode(unlocknode, cxtup);
                         }
-		    } else {
-                        printf("%lX == %lX\n", clang_getCursorReferenced(unlocknode->cursor), clang_getCursorReferenced(locknode->cursor));
-                        debugNode(locknode, cxtup);
-                        debugNode(unlocknode, cxtup);
+                        if(braek == true) {
+                            break;
+                        }
                     }
                     if(braek == true) {
+                        free(currnode);
                         break;
                     }
                 }
+                free(currnode);
             }
-            currnode = currnode->next;
+            free(locklist);
+            printf("%i < %i\n", i, scannodes);
+            printf("(i < scannodes) == %i\n", (i < scannodes));
+            printf("(0 < scannodes) == %i\n", (0 < scannodes));
         }
-        free(locklist);
-        printf("%i < %i\n", i, scannodes);
-        printf("(i < scannodes) == %i\n", (i < scannodes));
-        printf("(0 < scannodes) == %i\n", (0 < scannodes));
     //newnode->parent = node->parent;
     }
     free(scanarray);

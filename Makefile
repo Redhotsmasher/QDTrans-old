@@ -74,10 +74,12 @@ mdebug_common.o:
 mdebug_main: mdebug_common.o mdebug_printer.o mdebug_qdtrans.o
 	$(CC) src/main.c -O$(OPTLEV) $(DFLAGS) $(MDFLAGS) bin/common.o bin/printer.o bin/qdtrans.o $(CFLAGS) -o bin/qdtrans
 
-clean:
+cleandebug:
 	rm -f bin/*
-	rm -f tests/testfiles/*.qd.c
 
+clean:
+	rm -f tests/testfiles/*.qd.c
+	rm -f bin/*
 
 
 test0: test0a test0b test0c

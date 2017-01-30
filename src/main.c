@@ -33,7 +33,9 @@ int main(int argc, char *argv[]) {
     //fclose(stdout);
     printf("\nError Code: %i\nTotal nodes: %i\nMaximum depth: %i\n", tree->error, tree->nodes, tree->unmodifiedDepth);
     printf("Final max depth: %i\n", moddepth);
-    freeCrits(crits);
+    if(crits == NULL) {
+        freeCrits(crits);
+    }
     disposeTree(tree);
 END:
     return 0;

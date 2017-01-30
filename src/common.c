@@ -167,7 +167,7 @@ void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNod
 		clang_getFileLocation(rend, NULL, &(child->startline), &(child->startcol), NULL);
                 child->startcol--;
 	    } else {
-	        child->startline = after->startline;
+	        child->startline = after->startline+1;
 		child->startcol = after->startcol;
 		/*printf("child->startcol = %i\n\n", child->startcol);
                   printf("[III]\n\n");*/
@@ -207,7 +207,7 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
     debugNode2(before, cxtup);
     printf("%i\n", ncursorkind);
     debugNode2(currnode->next->node, cxtup);*/
-    if(clang_equalCursors(currnode->node->cursor, before->cursor) == 1) {
+    if((currnode->node->validcursor == true && before->validcursor == true && clang_equalCursors(currnode->node->cursor, before->cursor) == 1) || currnode->node->validcursor == false && before->validcursor && false && strcmp(currnode->node->newContent, before->newContent) == 0) {
         printf("addingToFirst\n");
 	if(child->modified != 0) {
 	    //child->modified++;
