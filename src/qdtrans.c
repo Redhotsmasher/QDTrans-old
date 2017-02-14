@@ -12,6 +12,7 @@ struct variable {
     bool pointer;
     bool threadLocal;
     bool global;
+    bool localToCrit;
     bool needsreturn;
   //struct treeNode* decl;
     struct variable* next;
@@ -205,7 +206,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    currvar = currcrit->accessedvars;
 	    int pos = 0;
 	    while(currvar != NULL) {
-	        if(/*currvar->needsreturn == true || (currvar->threadLocal == true && currvar->pointer == true)*/false) {
+	        if(currvar->needsreturn == true /*|| (currvar->threadLocal == true && currvar->pointer == true)*/) {
 		  //printf("%012lX (\"%s\")\n---\n", currvar, currvar->name);
 		    sprintf(varstringbefore2, "    %s %s = *__%s__;\n", currvar->typename, currvar->name, currvar->name);
 		    varstringbefore2 += (15 + strlen(currvar->typename) + 2*strlen(currvar->name));
@@ -456,12 +457,32 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 			CXCursor refcursor = clang_getCursorReferenced(node->cursor);
 			struct treeNode* refnode = findNode(tree->root, refcursor, cxtup);
 			//debugNode(refnode, cxtup);
+                        newvar->localToCrit = false;
  			if(clang_getCursorKind(refnode->parent->cursor) == CXCursor_TranslationUnit) {
-			    newvar->global = true; 
+			    newvar->global = true;
 			} else {
-			    newvar->global = false; 
+			    newvar->global = false;
 			}
 			CXSourceRange range = clang_getCursorExtent(refcursor);
+                        if(newvar->global == false) {
+                            CXSourceRange rlock = clang_getCursorExtent(crit->nodelist->node->cursor);
+                            CXSourceRange runlock = clang_getCursorExtent(crit->nodesafter->node->cursor);
+                            CXSourceLocation lvar = clang_getRangeStart(range);
+                            CXSourceLocation llock = clang_getRangeStart(rlock);
+                            CXSourceLocation lunlock = clang_getRangeStart(runlock);
+                            unsigned int sline;
+                            unsigned int scol;
+                            unsigned int lline;
+                            unsigned int lcol;
+                            unsigned int ulline;
+                            unsigned int ulcol;
+                            clang_getFileLocation(rstart, NULL, &sline, &scol, NULL);
+                            clang_getFileLocation(rlock, NULL, &lline, &llcol, NULL);
+                            clang_getFileLocation(runlock, NULL, &ulline, &ulcol, NULL);
+                            if(sline > lline && sline < ulline) {
+                                newvar->localToCrit = true;
+                            }
+                        }
 			CXToken* tokens;
 			unsigned int numTokens;
 			clang_tokenize(cxtup, range, &tokens, &numTokens);
