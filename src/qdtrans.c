@@ -174,7 +174,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    while(currvar != NULL) {
 	        strcat(fheaderstring, ", ");
 		strcat(fheaderstring, currvar->typename);
-	        if(currvar->threadLocal == true) {
+	        if(/*currvar->threadLocal == true*/false) {
 		    strcat(fheaderstring, " * ");
 		    strcat(fheaderstring, "__");
 		    strcat(fheaderstring, currvar->name);
@@ -337,7 +337,6 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
         debugTree2(tree->root, tree->cxtup);
         currcrit = currcrit->next;
         depth = 0;
-        
     }
 }
 

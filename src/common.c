@@ -115,27 +115,10 @@ void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNod
     node->childCount++;
     struct treeListNode* currnode = node->children;
     while(currnode->next != NULL) {
-        //printf("%li == %li, which implies %i == %i\n", currnode->node->cursor, after->cursor, clang_getCursorKind(currnode->node->cursor), clang_getCursorKind(after->cursor));
-        if(after->validcursor == true) {
-	    if(currnode->node->validcursor == true) {
-	        if(clang_equalCursors(currnode->node->cursor, after->cursor)) {
-		    break;
-		} else {
-		    currnode = currnode->next;
-		}
-	    } else {
-	        currnode = currnode->next;
-	    }
-	} else {
-	    if(currnode->node->validcursor == false) {
-	        if(strcmp(currnode->node->newContent, after->newContent) == 0) {
-		    break;
-		} else {
-		    currnode = currnode->next;
-		}
-	    } else {
-	        currnode = currnode->next;
-	    }
+        if(currnode->node == after) {
+            break;
+        } else {
+            currnode = currnode->next;
         }
     }
     if(child->modified != 0) {
@@ -150,13 +133,13 @@ void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNod
 	}
     }
     struct treeListNode* newnode = malloc(sizeof(struct treeListNode));
-    printf("after: ");
+    /*printf("after: ");
     debugNodeMini2(after);
     printf("Adding node after ");
-    debugNodeMini2(currnode->node);
+    debugNodeMini2(currnode->node);*/
     /*printf(" and ");
       debugNodeMini2(currnode->next->node);*/
-    printf(".\n");
+    //printf(".\n");
     newnode->node = child;
     newnode->next = currnode->next;
     currnode->next = newnode;
@@ -214,7 +197,7 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
     debugNode2(before, cxtup);
     printf("%i\n", ncursorkind);
     debugNode2(currnode->next->node, cxtup);*/
-    if((currnode->node->validcursor == true && before->validcursor == true && clang_equalCursors(currnode->node->cursor, before->cursor) == 1) || currnode->node->validcursor == false && before->validcursor == false && strcmp(currnode->node->newContent, before->newContent) == 0) {
+    if(currnode->node == before) {
         printf("addingToFirst\n");
 	if(child->modified != 0) {
 	    //child->modified++;
@@ -245,27 +228,11 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
 	//printf("sline = %i, scol = %i\n", sline, scol);
     } else {
         while(currnode->next != NULL) {
-	    if(before->validcursor == true) {
-	        if(currnode->next->node->validcursor == true) {
-		    if(clang_equalCursors(currnode->next->node->cursor, before->cursor)) {
-		        break;
-		    } else {
-		        currnode = currnode->next;
-		    }
-		} else {
-		    currnode = currnode->next;
-		}
-	    } else {
-	        if(currnode->node->validcursor == false) {
-		    if(strcmp(currnode->next->node->newContent, before->newContent) == 0) {
-		        break;
-		    } else {
-		        currnode = currnode->next;
-		    }
-		} else {
-		    currnode = currnode->next;
-		}
-	    }
+            if(currnode->next->node == before) {
+                break;
+            } else {
+                currnode = currnode->next;
+            }
         }
       //printf("\n%li == %li, which implies %i == %i\n", currnode->next->node->cursor, before->cursor, currnode->next->node->validcursor, before->validcursor);
         /*printf("\n-O-\n");
@@ -276,15 +243,15 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
 	debugNode2(currnode->next->node, cxtup);
 	printf("\n-O-\n");*/
         
-        printf("addChildAfter(");
+        /*printf("addChildAfter(");
 	debugNodeMini2(node, cxtup);
 	printf(", ");
 	debugNodeMini2(child, cxtup);
 	printf(", ");
-	debugNodeMini2(currnode->node, cxtup);
+	debugNodeMini2(currnode->node, cxtup);*/
 	//printf("), which should be equivalent to addChildBefore([same], [same], ");
         //debugNodeMini2(currnode->next->node, cxtup);
-        printf(")\n");
+        //printf(")\n");
 	addChildAfter(node, child, currnode->node);
     }
 }
