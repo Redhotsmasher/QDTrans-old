@@ -150,6 +150,13 @@ void addChildAfter(struct treeNode* node, struct treeNode* child, struct treeNod
 	}
     }
     struct treeListNode* newnode = malloc(sizeof(struct treeListNode));
+    printf("after: ");
+    debugNodeMini2(after);
+    printf("Adding node after ");
+    debugNodeMini2(currnode->node);
+    /*printf(" and ");
+      debugNodeMini2(currnode->next->node);*/
+    printf(".\n");
     newnode->node = child;
     newnode->next = currnode->next;
     currnode->next = newnode;
@@ -207,7 +214,7 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
     debugNode2(before, cxtup);
     printf("%i\n", ncursorkind);
     debugNode2(currnode->next->node, cxtup);*/
-    if((currnode->node->validcursor == true && before->validcursor == true && clang_equalCursors(currnode->node->cursor, before->cursor) == 1) || currnode->node->validcursor == false && before->validcursor && false && strcmp(currnode->node->newContent, before->newContent) == 0) {
+    if((currnode->node->validcursor == true && before->validcursor == true && clang_equalCursors(currnode->node->cursor, before->cursor) == 1) || currnode->node->validcursor == false && before->validcursor == false && strcmp(currnode->node->newContent, before->newContent) == 0) {
         printf("addingToFirst\n");
 	if(child->modified != 0) {
 	    //child->modified++;
@@ -261,7 +268,7 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
 	    }
         }
       //printf("\n%li == %li, which implies %i == %i\n", currnode->next->node->cursor, before->cursor, currnode->next->node->validcursor, before->validcursor);
-      /*printf("\n-O-\n");
+        /*printf("\n-O-\n");
 	debugNode2(child, cxtup);
 	printf("\n-\n");
         debugNode2(currnode->node, cxtup);
@@ -269,13 +276,15 @@ void addChildBefore(struct treeNode* node, struct treeNode* child, struct treeNo
 	debugNode2(currnode->next->node, cxtup);
 	printf("\n-O-\n");*/
         
-        /*printf("addChildAfter(");
-	debugNode2(node, cxtup);
+        printf("addChildAfter(");
+	debugNodeMini2(node, cxtup);
 	printf(", ");
-	debugNode2(child, cxtup);
+	debugNodeMini2(child, cxtup);
 	printf(", ");
-	debugNode2(currnode->node, cxtup);
-	printf(")\n");*/
+	debugNodeMini2(currnode->node, cxtup);
+	//printf("), which should be equivalent to addChildBefore([same], [same], ");
+        //debugNodeMini2(currnode->next->node, cxtup);
+        printf(")\n");
 	addChildAfter(node, child, currnode->node);
     }
 }
@@ -449,20 +458,79 @@ int debugNode2(struct treeNode* node, CXTranslationUnit cxtup) {
 	char* str3 = clang_getCString(cdisplaystring);
 	char* str4 = clang_getCString(cspellstring);
 	//if(clang_Location_isFromMainFile(rstart) != 0) {
-            printf("%i, [%i]:%s \"%s\"; %s (L%u:C%u-L%u:C%u), containing \n", node->modified, cursorkind, str2, str3, str4, *curlines, *curcols, *curlinee, *curcole);
-	    CXToken* tokens;
-	    unsigned int numTokens;
-	    clang_tokenize(cxtup, range, &tokens, &numTokens);
-	    printf("%u tokens (", numTokens);
-	    for(int i = 0; i<numTokens; i++) {
-	        CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
-	        printf("%s ", clang_getCString(tokenstring));
-		clang_disposeString(tokenstring);
+        printf("%i, [%i]:%s \"%s\"; %s (L%u:C%u-L%u:C%u), containing \n", node->modified, cursorkind, str2, str3, str4, *curlines, *curcols, *curlinee, *curcole);
+        CXToken* tokens;
+        unsigned int numTokens;
+        clang_tokenize(cxtup, range, &tokens, &numTokens);
+        printf("%u tokens (", numTokens);
+        for(int i = 0; i<numTokens; i++) {
+            CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
+            printf("%s ", clang_getCString(tokenstring));
+            clang_disposeString(tokenstring);
+        }
+        clang_disposeTokens(cxtup, tokens, numTokens);
+        printf(")");
+        printf("\n");
+        //}*/
+	clang_disposeString(typestring);
+	clang_disposeString(cdisplaystring);
+	clang_disposeString(cspellstring);
+ 	free(curlines);
+	free(curlinee);
+	free(curcols);
+	free(curcole);
+    } else {
+        printf("Modded: ");
+	printf("%i, %s", node->modified, node->newContent);
+	printf("\n");
+    }
+}
+
+int debugNodeMini2(struct treeNode* node, CXTranslationUnit cxtup) {
+    if(node->validcursor == true) {
+        printf("Debugging node %12lX (CXCursor %12lX).\n", node, node->cursor);
+        if(node->modified > 0) {
+	    printf("\n%i[\n", node->modified);
+	    struct treeListNode* modlist = node->modifiedNodes;
+	    while(modlist != NULL) {
+	        printf("    %s\n", modlist->node->newContent);
+		modlist = modlist->next;
 	    }
-	    clang_disposeTokens(cxtup, tokens, numTokens);
-	    printf(")");
-            printf("\n");
-	    //}*/
+	    //printf("    %s\n", modlist->node->newContent);
+	    printf("]\n");
+        }
+        CXType type = clang_getCursorType(node->cursor);
+	CXString typestring = clang_getTypeSpelling(type);
+	CXString cdisplaystring = clang_getCursorDisplayName(node->cursor);
+	CXString cspellstring = clang_getCursorSpelling(node->cursor);
+	unsigned* curlines = malloc(sizeof(unsigned));
+	unsigned* curlinee = malloc(sizeof(unsigned));
+	unsigned* curcols = malloc(sizeof(unsigned));
+	unsigned* curcole = malloc(sizeof(unsigned));
+	CXSourceRange range = clang_getCursorExtent(node->cursor);
+	CXSourceLocation rstart = clang_getRangeStart(range);
+	CXSourceLocation rend = clang_getRangeEnd(range);
+	clang_getFileLocation (rstart, NULL, curlines, curcols, NULL);
+	clang_getFileLocation (rend, NULL, curlinee, curcole, NULL);
+	enum CXCursorKind cursorkind = clang_getCursorKind(node->cursor);
+	char* str2 = clang_getCString(typestring);
+	char* str3 = clang_getCString(cdisplaystring);
+	char* str4 = clang_getCString(cspellstring);
+	//if(clang_Location_isFromMainFile(rstart) != 0) {
+        printf("%i, [%i]:%s \"%s\"; %s (L%u:C%u-L%u:C%u), containing \n", node->modified, cursorkind, str2, str3, str4, *curlines, *curcols, *curlinee, *curcole);
+        /*CXToken* tokens;
+        unsigned int numTokens;
+        clang_tokenize(cxtup, range, &tokens, &numTokens);
+        printf("%u tokens (", numTokens);
+        for(int i = 0; i<numTokens; i++) {
+            CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
+            printf("%s ", clang_getCString(tokenstring));
+            clang_disposeString(tokenstring);
+        }
+        clang_disposeTokens(cxtup, tokens, numTokens);
+        printf(")");
+        printf("\n");
+        //}*/
 	clang_disposeString(typestring);
 	clang_disposeString(cdisplaystring);
 	clang_disposeString(cspellstring);

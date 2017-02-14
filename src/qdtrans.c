@@ -333,7 +333,11 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    addChildBefore(currnode->node->parent, newNode, currnode->node);*/
 	    free(newfunname);	    
 	}
-	currcrit = currcrit->next;
+        depth = 0;
+        debugTree2(tree->root, tree->cxtup);
+        currcrit = currcrit->next;
+        depth = 0;
+        
     }
 }
 
