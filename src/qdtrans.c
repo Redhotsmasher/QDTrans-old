@@ -6,13 +6,13 @@
 #include "common.h"
 #include "printer.h"
 
+enum locality {GLOBAL, CRITLOCAL, FUNLOCAL, ELSELOCAL}; // GLOBAL = global, CRITLOCAL = declared inside critical section, FUNLOCAL = declared inside the function which contains the critical section, ELSELOCAL = declared inside another function.
+
 struct variable {
     char* name;
     char* typename;
+    enum locality locality;
     bool pointer;
-    bool threadLocal;
-    bool global;
-    bool localToCrit;
     bool needsreturn;
   //struct treeNode* decl;
     struct variable* next;
@@ -459,10 +459,8 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 			//debugNode(refnode, cxtup);
                         newvar->localToCrit = false;
  			if(clang_getCursorKind(refnode->parent->cursor) == CXCursor_TranslationUnit) {
-			    newvar->global = true;
-			} else {
-			    newvar->global = false;
-			}
+			    newvar->locality = GLOBAL;
+                            newvar->needsreturn = false;			} 
 			CXSourceRange range = clang_getCursorExtent(refcursor);
                         if(newvar->global == false) {
                             CXSourceRange rlock = clang_getCursorExtent(crit->nodelist->node->cursor);
@@ -480,9 +478,35 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
                             clang_getFileLocation(rlock, NULL, &lline, &llcol, NULL);
                             clang_getFileLocation(runlock, NULL, &ulline, &ulcol, NULL);
                             if(sline > lline && sline < ulline) {
-                                newvar->localToCrit = true;
+                                newvar->locality = CRITLOCAL;
+                                newvar->needsreturn = false;
+                            } else {
+                                struct treeNode* cpnode = refnode;
+                                enum CXCursorKind ccxck;
+                                while(cpnode != NULL && ccxck != CXCursor_FunctionDecl) {
+                                    ccxck = clang_getCursorKind(refnode->cursor);
+                                    cpnode = cpnode->parent;
+                                }
+                                if(cpnode != NULL) {
+                                    CXSourceRange cprange = clang_getCursorExtent(cpnode->cursor);
+                                    CXSourceLocation cpstart = clang_getRangeStart(cprange);
+                                    CXSourceLocation cpend = clang_getRangeEnd(cprange);
+                                    unsigned int cpsline;
+                                    unsigned int cpscol;
+                                    unsigned int cpeline;
+                                    unsigned int cpecol;
+                                    clang_getFileLocation(cpstart, NULL, &cpsline, &cpscol, NULL);
+                                    clang_getFileLocation(cpsend, NULL, &cpeline, &cpecol, NULL);
+                                    if(sline > cpsline && sline < cpeline) {
+                                        newvar->locality = FUNLOCAL;
+                                    } else {
+                                        newvar->locality = ELSELOCAL;
+                                        newvar->needsreturn = true;
+                                    }
+                                }
                             }
                         }
+                        
 			CXToken* tokens;
 			unsigned int numTokens;
 			clang_tokenize(cxtup, range, &tokens, &numTokens);
@@ -538,6 +562,30 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 	}
     }
     depth--;
+}
+
+enum accestype {NONE, READ, WRITE};
+
+enum accesstype findNode(struct treeNode* node, CXCursor cursor, CXTranslationUnit cxtup) { // Unfinished
+    depth++;
+    struct treeNode* retval = NULL;
+    if(node->validcursor == true) {
+        if(clang_equalCursors(cursor, node->cursor)) {
+	    return node;
+	}
+    }
+    if(node->children != NULL) {
+        struct treeListNode* childlist = node->children;
+	while(childlist != NULL) {
+	    retval = findNode(childlist->node, cursor, cxtup);
+	    if(retval != NULL) {
+	        return retval;
+	    }
+	    childlist = childlist->next;
+	}
+	//printf("upCritRecursive\n");
+    }
+    return NULL;
 }
 
 struct treeNode* findNode(struct treeNode* node, CXCursor cursor, CXTranslationUnit cxtup) {
