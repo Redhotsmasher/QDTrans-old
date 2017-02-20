@@ -6,12 +6,13 @@
 #include "common.h"
 #include "printer.h"
 
-enum locality {GLOBAL, CRITLOCAL, FUNLOCAL, ELSELOCAL}; // GLOBAL = global, CRITLOCAL = declared inside critical section, FUNLOCAL = declared inside the function which contains the critical section, ELSELOCAL = declared inside another function.
+enum locality {UNDEF, GLOBAL, CRITLOCAL, FUNLOCAL, ELSELOCAL}; // GLOBAL = global, CRITLOCAL = declared inside critical section, FUNLOCAL = declared inside the function which contains the critical section, ELSELOCAL = declared inside another function.
 
 struct variable {
     char* name;
     char* typename;
     enum locality locality;
+    bool threadLocal;
     bool pointer;
     bool needsreturn;
   //struct treeNode* decl;
@@ -175,7 +176,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    while(currvar != NULL) {
 	        strcat(fheaderstring, ", ");
 		strcat(fheaderstring, currvar->typename);
-	        if(/*currvar->threadLocal == true*/false) {
+	        if(/*currvar->threadLocal == true*/(currvar->needsreturn == true && strcmp(currvar->typename, "pthread_mutex_t") != 0)) {
 		    strcat(fheaderstring, " * ");
 		    strcat(fheaderstring, "__");
 		    strcat(fheaderstring, currvar->name);
@@ -206,7 +207,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    currvar = currcrit->accessedvars;
 	    int pos = 0;
 	    while(currvar != NULL) {
-	        if(currvar->needsreturn == true /*|| (currvar->threadLocal == true && currvar->pointer == true)*/) {
+	        if((currvar->needsreturn == true && strcmp(currvar->typename, "pthread_mutex_t") != 0) /*|| (currvar->threadLocal == true && currvar->pointer == true)*/) {
 		  //printf("%012lX (\"%s\")\n---\n", currvar, currvar->name);
 		    sprintf(varstringbefore2, "    %s %s = *__%s__;\n", currvar->typename, currvar->name, currvar->name);
 		    varstringbefore2 += (15 + strlen(currvar->typename) + 2*strlen(currvar->name));
@@ -220,7 +221,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    char* fcallstring = malloc(size2 + 12 + 5);
 	    char* fcallstring2 = fcallstring;
 	    *fcallstring = NULL;
-	    if(/*currvar->pointer == true*/false) {
+	    if((currvar->needsreturn == true && strcmp(currvar->typename, "pthread_mutex_t") != 0)) {
 	        sprintf(fcallstring2, "%s(&%s", newfunname, currvar->name);
 		fcallstring2 += (2+strlen(newfunname)+strlen(currvar->name));
 	    } else {
@@ -229,7 +230,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    }
 	    currvar = currvar->next;
 	    while(currvar != NULL) {
-	        if(/*currvar->pointer == true*/false) {
+	        if(currvar->needsreturn == true) {
 	            sprintf(fcallstring2, ", &%s", currvar->name);
 		    fcallstring2 += (3+strlen(currvar->name));
 		} else {
@@ -394,6 +395,10 @@ void scanCrit(struct criticalSection* crit, CXTranslationUnit cxtup) {
     }
 }
 
+enum accesstype {NONE, READ, WRITE};
+
+enum accesstype findNodeAccess(struct treeNode* node, char* name, CXTranslationUnit cxtup);
+
 void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTranslationUnit cxtup, bool isreturn) {
   //printf("Scan!\n");
     depth++;
@@ -454,15 +459,15 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 			    newvar->pointer = false;
 			}
 			//newvar->threadLocal = false;
+                        newvar->locality = UNDEF;
 			CXCursor refcursor = clang_getCursorReferenced(node->cursor);
 			struct treeNode* refnode = findNode(tree->root, refcursor, cxtup);
 			//debugNode(refnode, cxtup);
-                        newvar->localToCrit = false;
- 			if(clang_getCursorKind(refnode->parent->cursor) == CXCursor_TranslationUnit) {
+                        if(clang_getCursorKind(refnode->parent->cursor) == CXCursor_TranslationUnit) {
 			    newvar->locality = GLOBAL;
                             newvar->needsreturn = false;			} 
 			CXSourceRange range = clang_getCursorExtent(refcursor);
-                        if(newvar->global == false) {
+                        if(newvar->locality == UNDEF) {
                             CXSourceRange rlock = clang_getCursorExtent(crit->nodelist->node->cursor);
                             CXSourceRange runlock = clang_getCursorExtent(crit->nodesafter->node->cursor);
                             CXSourceLocation lvar = clang_getRangeStart(range);
@@ -474,17 +479,18 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
                             unsigned int lcol;
                             unsigned int ulline;
                             unsigned int ulcol;
-                            clang_getFileLocation(rstart, NULL, &sline, &scol, NULL);
-                            clang_getFileLocation(rlock, NULL, &lline, &llcol, NULL);
-                            clang_getFileLocation(runlock, NULL, &ulline, &ulcol, NULL);
+                            clang_getFileLocation(lvar, NULL, &sline, &scol, NULL);
+                            clang_getFileLocation(llock, NULL, &lline, &lcol, NULL);
+                            clang_getFileLocation(lunlock, NULL, &ulline, &ulcol, NULL);
                             if(sline > lline && sline < ulline) {
                                 newvar->locality = CRITLOCAL;
                                 newvar->needsreturn = false;
                             } else {
                                 struct treeNode* cpnode = refnode;
                                 enum CXCursorKind ccxck;
+                                ccxck = clang_getCursorKind(refnode->cursor);
                                 while(cpnode != NULL && ccxck != CXCursor_FunctionDecl) {
-                                    ccxck = clang_getCursorKind(refnode->cursor);
+                                    ccxck = clang_getCursorKind(cpnode->cursor);
                                     cpnode = cpnode->parent;
                                 }
                                 if(cpnode != NULL) {
@@ -496,7 +502,7 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
                                     unsigned int cpeline;
                                     unsigned int cpecol;
                                     clang_getFileLocation(cpstart, NULL, &cpsline, &cpscol, NULL);
-                                    clang_getFileLocation(cpsend, NULL, &cpeline, &cpecol, NULL);
+                                    clang_getFileLocation(cpend, NULL, &cpeline, &cpecol, NULL);
                                     if(sline > cpsline && sline < cpeline) {
                                         newvar->locality = FUNLOCAL;
                                     } else {
@@ -506,7 +512,23 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
                                 }
                             }
                         }
-                        
+                        if(newvar->locality == FUNLOCAL) {
+                            struct treeListNode* tlnode = crit->nodesafter;
+                            enum accesstype at = NONE;
+                            while(tlnode != NULL && at == NONE) {
+                                at = findNodeAccess(tlnode->node, namestring, cxtup);
+                                tlnode = tlnode->next;
+                            }
+                            //printf("findNodeAccess = %i\n", at);
+                            printf("needsreturn = %i\n", newvar->needsreturn);
+                            if(at == READ) {
+                                printf("READ\n");
+                                newvar->needsreturn = true;
+                            } else {
+                                printf("NOT READ\n");
+                                newvar->needsreturn = false;
+                            }
+                        }
 			CXToken* tokens;
 			unsigned int numTokens;
 			clang_tokenize(cxtup, range, &tokens, &numTokens);
@@ -525,8 +547,9 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 			    debugNode(refnode, cxtup);
 			    printf("refnode->parent's cxck is %i.\n", clang_getCursorKind(refnode->parent->cursor));
 			}
+                        printf("needsreturn = %i\n", newvar->needsreturn);
 			//printf("%s\n", clang_Cursor_hasAttrs(node->cursor));
-			printf("[p->p->cxck = %i][%s %s]: pointer = %i, threadLocal = %i, global = %i\n\n", cxck2, newvar->typename, newvar->name, newvar->pointer, newvar->threadLocal, newvar->global);
+			//printf("[p->p->cxck = %i][%s %s]: pointer = %i, threadLocal = %i, global = %i\n\n", cxck2, newvar->typename, newvar->name, newvar->pointer, newvar->threadLocal, newvar->global);
 			clang_disposeString(typestring);
 			newvar->next = NULL;
 			if(crit->accessedvars == NULL) {
@@ -561,31 +584,38 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 	    printf("Weird node is weird.\n");
 	}
     }
-    depth--;
+     depth--;
 }
 
-enum accestype {NONE, READ, WRITE};
+//enum accesstype {NONE, READ, WRITE};
 
-enum accesstype findNode(struct treeNode* node, CXCursor cursor, CXTranslationUnit cxtup) { // Unfinished
-    depth++;
-    struct treeNode* retval = NULL;
+enum accesstype findNodeAccess(struct treeNode* node, char* name, CXTranslationUnit cxtup) { 
+    enum accesstype retval = NONE;
     if(node->validcursor == true) {
-        if(clang_equalCursors(cursor, node->cursor)) {
-	    return node;
+        enum CXCursorKind cxck = clang_getCursorKind(node->cursor);
+        if(cxck == CXCursor_DeclRefExpr) {
+            CXString cdisplaystring = clang_getCursorDisplayName(node->cursor);
+            char* namestring = clang_getCString(cdisplaystring);
+            if(strcmp(namestring, name)) {
+                retval = READ;
+            }
+            clang_disposeString(cdisplaystring);
 	}
     }
-    if(node->children != NULL) {
+    if(retval == NONE && node->children != NULL) {
         struct treeListNode* childlist = node->children;
 	while(childlist != NULL) {
-	    retval = findNode(childlist->node, cursor, cxtup);
-	    if(retval != NULL) {
+            printf("childlist: %12lX, childlist->node: %12lX\n", childlist, childlist->node);
+	    retval = findNodeAccess(childlist->node, name, cxtup);
+	    if(retval != NONE) {
 	        return retval;
 	    }
 	    childlist = childlist->next;
 	}
 	//printf("upCritRecursive\n");
+    } else {
+        return retval;
     }
-    return NULL;
 }
 
 struct treeNode* findNode(struct treeNode* node, CXCursor cursor, CXTranslationUnit cxtup) {
@@ -896,6 +926,7 @@ void scanTreeIterative(CXTranslationUnit cxtup) {
                             debugNode(unlocknode, cxtup);
                         }
                         if(braek == true) {
+                            clang_disposeString(cdisplaystring2);
                             break;
                         }
                     }
@@ -904,8 +935,10 @@ void scanTreeIterative(CXTranslationUnit cxtup) {
                         break;
                     }
                 }
+                clang_disposeString(cdisplaystring2);
                 free(currnode);
             }
+            free(scanarray2);
             free(locklist);
             printf("%i < %i\n", i, scannodes);
             printf("(i < scannodes) == %i\n", (i < scannodes));
@@ -1174,6 +1207,7 @@ void debugTree2(struct treeNode* node, CXTranslationUnit cxtup) {
 	    for(int i = 0; i<numTokens; i++) {
 	        CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
 	        printf("%s ", clang_getCString(tokenstring));
+                clang_disposeString(tokenstring);
 	    }
 	    clang_disposeTokens(cxtup, tokens, numTokens);
 	    printf(")");
@@ -1495,7 +1529,7 @@ void printCrit(struct criticalSection* crit, CXTranslationUnit cxtup) {
 	struct variable* currvar = crit->accessedvars;
 	printf("accessedvars: \n");
 	while(currvar != NULL) {
-	    printf("    %s\n", currvar->name);
+	    printf("    %s (locality: %i, threadLocal: %i, pointer: %i, needsreturn: %i)\n", currvar->name, currvar->locality, currvar->threadLocal, currvar->pointer, currvar->needsreturn);
 	    currvar = currvar->next;
 	}
     } else {

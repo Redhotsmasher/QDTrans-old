@@ -577,4 +577,5 @@ void printTree(struct nodeTree* inTree) {
         printf("\n%i\n", list[i]->modified);
         }*/
     printTreeIterative(cxtup, list, count);
+    free(list);
 }
