@@ -174,17 +174,19 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    strcat(fheaderstring, currvar->name);
 	    currvar = currvar->next;
 	    while(currvar != NULL) {
-	        strcat(fheaderstring, ", ");
-		strcat(fheaderstring, currvar->typename);
-	        if(/*currvar->threadLocal == true*/(currvar->needsreturn == true && strcmp(currvar->typename, "pthread_mutex_t") != 0)) {
-		    strcat(fheaderstring, " * ");
-		    strcat(fheaderstring, "__");
-		    strcat(fheaderstring, currvar->name);
-		    strcat(fheaderstring, "__");
-		} else {
-		    strcat(fheaderstring, " ");
-		    strcat(fheaderstring, currvar->name);
-		} 
+                if(currvar->locality != GLOBAL) {
+                    strcat(fheaderstring, ", ");
+                    strcat(fheaderstring, currvar->typename);
+                    if(/*currvar->threadLocal == true*/(currvar->needsreturn == true && strcmp(currvar->typename, "pthread_mutex_t") != 0)) {
+                        strcat(fheaderstring, " * ");
+                        strcat(fheaderstring, "__");
+                        strcat(fheaderstring, currvar->name);
+                        strcat(fheaderstring, "__");
+                    } else {
+                        strcat(fheaderstring, " ");
+                        strcat(fheaderstring, currvar->name);
+                    }
+                }
 		currvar = currvar->next;
 	    }
 	    strcat(fheaderstring, ") {");
@@ -207,7 +209,8 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    currvar = currcrit->accessedvars;
 	    int pos = 0;
 	    while(currvar != NULL) {
-	        if((currvar->needsreturn == true && strcmp(currvar->typename, "pthread_mutex_t") != 0) /*|| (currvar->threadLocal == true && currvar->pointer == true)*/) {
+                //printf("currvar->locality == %i\n", currvar->locality);
+	        if((currvar->needsreturn == true && currvar->locality != GLOBAL && strcmp(currvar->typename, "pthread_mutex_t") != 0) /*|| (currvar->threadLocal == true && currvar->pointer == true)*/) {
 		  //printf("%012lX (\"%s\")\n---\n", currvar, currvar->name);
 		    sprintf(varstringbefore2, "    %s %s = *__%s__;\n", currvar->typename, currvar->name, currvar->name);
 		    varstringbefore2 += (15 + strlen(currvar->typename) + 2*strlen(currvar->name));
@@ -221,7 +224,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    char* fcallstring = malloc(size2 + 12 + 5);
 	    char* fcallstring2 = fcallstring;
 	    *fcallstring = NULL;
-	    if((currvar->needsreturn == true && strcmp(currvar->typename, "pthread_mutex_t") != 0)) {
+	    if((currvar->needsreturn == true && currvar->locality != GLOBAL && strcmp(currvar->typename, "pthread_mutex_t") != 0)) {
 	        sprintf(fcallstring2, "%s(&%s", newfunname, currvar->name);
 		fcallstring2 += (2+strlen(newfunname)+strlen(currvar->name));
 	    } else {
@@ -230,13 +233,15 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    }
 	    currvar = currvar->next;
 	    while(currvar != NULL) {
-	        if(currvar->needsreturn == true) {
-	            sprintf(fcallstring2, ", &%s", currvar->name);
-		    fcallstring2 += (3+strlen(currvar->name));
-		} else {
-	            sprintf(fcallstring2, ", %s", currvar->name);
-		    fcallstring2 += (2+strlen(currvar->name));
-		}
+                if(currvar->locality != GLOBAL) {
+                    if((currvar->needsreturn == true)) {
+                        sprintf(fcallstring2, ", &%s", currvar->name);
+                        fcallstring2 += (3+strlen(currvar->name));
+                    } else {
+                        sprintf(fcallstring2, ", %s", currvar->name);
+                        fcallstring2 += (2+strlen(currvar->name));
+                    }
+                }
 		currvar = currvar->next;
 	    }
 	    sprintf(fcallstring2, ");");
