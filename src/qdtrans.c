@@ -127,9 +127,26 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	        nodeCount++;
 		currnode = currnode->next;
 	    }
+            struct variable* currvar = currcrit->accessedvars;
+            int varCount = 0;
+            while(currvar != NULL) {
+                varCount++;
+                currvar = currvar->next;
+            }
 	    nodeCount++; // For unlock node, technically part of "nodesafter".
 	    char* nodestrings[nodeCount];
-	    currnode = currcrit->nodelist;
+            char* varstrings[varCount];
+	    currvar = currcrit->accessedvars;
+            for(int i = 0; i < varCount; i++) {
+                varstrings[i] = malloc(strlen(currvar->typename) + strlen(currvar->name) + 6);
+                if(currvar->locality != GLOBAL) {
+                    sprintf(varstrings[i], "    %s %s;", currvar->typename, currvar->name);
+                } else {
+                    sprintf(varstrings[i], "");
+                }
+                currvar = currvar->next;
+            }
+            currnode = currcrit->nodelist;
 	    for(int i = 0; i < (nodeCount-1); i++) {
 	      /*char* asdf = "asdf\n";
 		nodestrings[i] = asdf;
@@ -151,11 +168,9 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	        currnode = currnode->next;
 	    }
 	    nodestrings[nodeCount-1] = printNode(currcrit->nodesafter->node, cxtup);
-	    struct variable* currvar = currcrit->accessedvars;
-	    int numvars = 0;
+	    currvar = currcrit->accessedvars;
 	    int size = 3;
 	    while(currvar != NULL) {
-	        numvars++;
 	        size = size + strlen(currvar->name) + strlen(currvar->typename) + 7;
 		currvar = currvar->next;
 	    }
@@ -163,7 +178,9 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    char* newfunname = malloc(12);
 	    sprintf(newfunname, "critSec%i", critCount);
 	    critCount++;
-	    char* fheaderstring = malloc(3*(numvars-1) + size + 22 + (5*numvars));
+	    char* fheaderstring = malloc(3*(varCount-1) + size + 22 + (5*varCount));
+            char* structnamestring = malloc(20);
+            sprintf(structnamestring, "} %s_msg;", newfunname);
 	    *fheaderstring = NULL;
 	    currvar = currcrit->accessedvars;
 	    strcat(fheaderstring, "\n\nvoid ");
@@ -194,7 +211,7 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    size = 0;
 	    currcrit->needsWait = false;
 	    while(currvar != NULL) {
-	        size = size + 2*strlen(currvar->name) + strlen(currvar->typename) + 16*numvars;
+	        size = size + 2*strlen(currvar->name) + strlen(currvar->typename) + 16*varCount;
 		if(currvar->pointer == true || currvar->threadLocal == true) {
 		    currcrit->needsWait = true;
 		}
@@ -245,6 +262,12 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 		currvar = currvar->next;
 	    }
 	    sprintf(fcallstring2, ");");
+            printf("\n\n---\n\n");
+            printf("\n\ntypedef struct {\n");
+            for(int i = 0; i < varCount; i++) {
+                printf("%s\n", varstrings[i]);
+            }
+            printf("\n%s\n", structnamestring);
 	    printf("\n\n---\n\n");
 	    printf("%s\n", fcallstring);
 	    printf("\n\n---\n\n");
@@ -293,7 +316,36 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 	    debugNode(currnode->node, tree->cxtup);
 	    /*printf("\nQEWADSZX\n\n");
 	    debugNode(currnode->node->parent, tree->cxtup);*/
-	    struct treeNode* newNode = malloc(sizeof(struct treeNode));
+            char* structheaderstring = malloc(16);
+            sprintf(structheaderstring, "\n\ntypedef struct {");
+	    struct treeNode* newNode;
+            newNode = malloc(sizeof(struct treeNode));
+            newNode->childCount = 0;
+	    newNode->children = NULL;
+	    newNode->modified = 1;
+            newNode->newContent = structheaderstring;
+            newNode->modifiedNodes = NULL;
+	    newNode->validcursor = false;
+	    addChildBefore(currnode->node->parent, newNode, currnode->node);
+            for(int i = 0; i < varCount; i++) {
+	        newNode = malloc(sizeof(struct treeNode));
+		newNode->childCount = 0;
+		newNode->children = NULL;
+		newNode->modified = 1;
+		newNode->newContent = varstrings[i];
+		newNode->modifiedNodes = NULL;
+		newNode->validcursor = false;
+		addChildBefore(currnode->node->parent, newNode, currnode->node);
+	    }
+            newNode = malloc(sizeof(struct treeNode));
+	    newNode->childCount = 0;
+	    newNode->children = NULL;
+	    newNode->modified = 1;
+	    newNode->newContent = structnamestring;
+	    newNode->modifiedNodes = NULL;
+	    newNode->validcursor = false;
+	    addChildBefore(currnode->node->parent, newNode, currnode->node);
+            newNode = malloc(sizeof(struct treeNode));
 	    newNode->childCount = 0;
 	    newNode->children = NULL;
 	    newNode->modified = 1;
