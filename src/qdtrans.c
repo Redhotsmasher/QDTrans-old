@@ -29,7 +29,7 @@ struct variable {
 struct criticalSection {
     bool needsRefactoring;
     bool needsWait;
-    struct treeNode* lockvarNode;
+  //struct treeNode* lockvarNode;
   //struct treeNode* lockNode;
   //struct treeNode* unlockNode;
     struct variable* accessedvars;
@@ -38,6 +38,13 @@ struct criticalSection {
     struct treeListNode* nodesafter;
     struct criticalSection* next;
 };
+
+struct lockListNode {
+    char* lockname;
+    struct lockListNode* next;
+};
+
+struct lockListNode locklist;
 
 //struct treeNode* dNode;
 
@@ -105,6 +112,28 @@ void clearNode(struct treeListNode* node) {
 	    childlist = childlist->next;
 	}
     }
+}
+
+void modifyLocks(struct treeNode* node, CXTranslationUnit cxtup) {
+    depth++;
+    if(node->validcursor == true) {
+        bool init = (strcmp(str, &("pthread_mutex_init")) == 0);
+        bool destroy = (strcmp(str, &("pthread_mutex_destroy")) == 0);
+        bool lock = (strcmp(str, &("pthread_mutex_lock")) == 0);
+        bool unlock = (strcmp(str, &("pthread_mutex_unlock")) == 0);
+        // WIP
+    }  
+    if(node->children != NULL) {
+        printf("->\n");
+        struct treeListNode* childlist = node->children;
+        while(childlist != NULL) {
+            debugTree2(childlist->node, cxtup);
+            childlist = childlist->next;
+        }
+    } else {
+        printf("\n");
+    }
+    depth--;
 }
 
 void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
@@ -504,7 +533,8 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 			newvar->name = malloc(strlen(namestring) + 1);
 			strcpy(newvar->name, namestring);
 			CXType type = clang_getCursorType(node->cursor);
-			CXString typestring = clang_getTypeSpelling(type);
+                        CXType type2 = clang_getCanonicalType(type)
+			CXString typestring = clang_getTypeSpelling(type2);
 			char* tstring = clang_getCString(typestring);
 			//printf("Type might be %s?\n", tstring);
 			newvar->typename = malloc(strlen(tstring) + 1);
@@ -515,6 +545,24 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 			} else {
 			    newvar->pointer = false;
 			}
+                        CXString typestring2 = clang_getTypeSpelling(type);
+                        char* tstring2 = clang_getCString(typestring2);
+                        if(strcmp(tstring2, "pthread_mutex_t") == 0) {
+                            struct lockListNode* newlock = malloc(sizeof(struct lockListNode));
+                            newlock->lockname = malloc(strlen(namestring) + 1);
+                            strcpy(newvar->name, namestring);
+                            clang_disposeString(cdisplaystring);
+                        }
+                        clang_disposeString(typestring2);
+                        struct lockListNode* currlock = locklist;
+                        if(currlock != NULL) {
+                            while(currlock->next != NULL) {
+                                currlock = currlock->next;
+                            }
+                            currlock->next = newlock;
+                        } else {
+                            locklist = newlock;
+                        }
 			//newvar->threadLocal = false;
                         newvar->locality = UNDEF;
 			CXCursor refcursor = clang_getCursorReferenced(node->cursor);
@@ -522,7 +570,8 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 			//debugNode(refnode, cxtup);
                         if(clang_getCursorKind(refnode->parent->cursor) == CXCursor_TranslationUnit) {
 			    newvar->locality = GLOBAL;
-                            newvar->needsreturn = false;			} 
+                            newvar->needsreturn = false;
+			} 
 			CXSourceRange range = clang_getCursorExtent(refcursor);
                         if(newvar->locality == UNDEF) {
                             CXSourceRange rlock = clang_getCursorExtent(crit->nodelist->node->cursor);
@@ -564,12 +613,11 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
                                         newvar->locality = FUNLOCAL;
                                     } else {
                                         newvar->locality = ELSELOCAL;
-                                        newvar->needsreturn = true;
                                     }
                                 }
                             }
                         }
-                        if(newvar->locality == FUNLOCAL) {
+                        if(newvar->locality == FUNLOCAL || (newvar->locality == ELSELOCAL && isptr == NULL)) {
                             struct treeListNode* tlnode = crit->nodesafter;
                             enum accesstype at = NONE;
                             while(tlnode != NULL && at == NONE) {
@@ -624,7 +672,29 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
 		    first = false;
 		    }*/
 	    }
-	}
+	} else if(cxck == CXCursor_MemberRefExpr) {
+            CXType type = clang_getCursorType(node->cursor);
+            CXString typestring2 = clang_getTypeSpelling(type);
+            char* tstring = clang_getCString(typestring2);
+            if(strcmp(tstring, "pthread_mutex_t") == 0) {
+                struct lockListNode* newlock = malloc(sizeof(struct lockListNode));
+                CXString cdisplaystring = clang_getCursorDisplayName(node->cursor);
+                char* namestring = clang_getCString(cdisplaystring);
+                newlock->lockname = malloc(strlen(namestring) + 1);
+                strcpy(newvar->name, namestring);
+                clang_disposeString(cdisplaystring);
+            }
+            clang_disposeString(typestring2);
+            struct lockListNode* currlock = locklist;
+            if(currlock != NULL) {
+                while(currlock->next != NULL) {
+                    currlock = currlock->next;
+                }
+                currlock->next = newlock;
+            } else {
+                locklist = newlock;
+            }
+        }
 	if(node->children != NULL) {
 	    struct treeListNode* childlist = node->children;
 	    while(childlist != NULL) {
@@ -748,7 +818,7 @@ void findCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 			}
 			newcrit->needsWait = false;
 			//currnode = currnode->next;
-			newcrit->lockvarNode = currnode->next->node->children->next->node;
+			//newcrit->lockvarNode = currnode->next->node->children->next->node;
 		    } else if(currnode->node->newContent != NULL && (strcmp(currnode->node->newContent, "\nend") == 0)) {
 		      //printf("2\n");
 		        lastnode->next = currnode->next;
@@ -1572,8 +1642,8 @@ void debugCrits(struct criticalSection* crits, CXTranslationUnit cxtup) {
 void printCrit(struct criticalSection* crit, CXTranslationUnit cxtup) {
     printf("NeedsRefactoring: %i\n", crit->needsRefactoring);
     printf("NeedsWait: %i\n", crit->needsWait);
-    printf("lockvarNode: %012lX\n", crit->lockvarNode);
-    debugNode(crit->lockvarNode, cxtup);
+    //printf("lockvarNode: %012lX\n", crit->lockvarNode);
+    //debugNode(crit->lockvarNode, cxtup);
     printf("\n");
     /*printf("lockNode: %012lX\n", crit->lockNode);
     debugNode(crit->lockNode, cxtup);
