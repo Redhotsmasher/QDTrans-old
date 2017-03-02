@@ -124,8 +124,8 @@ void modifyLocks(struct treeNode* node, CXTranslationUnit cxtup) {
     struct lockListNode* currlock = locklist;
     while(currlock != NULL) {
         if(currlock->declnode->modified == 0) {
-            char* newstring = malloc(15 + strlen(currlock->lockname));
-            sprintf(newstring, "    QDLock * %s;", currlock->lockname);
+            char* newstring = malloc(13 + strlen(currlock->lockname));
+            sprintf(newstring, "    QDLock %s;", currlock->lockname);
             struct treeNode* currnode2 = currlock->declnode;
             while(currnode2->parent != NULL) {
                 addModified(currnode2->parent, currlock->declnode);
@@ -155,6 +155,8 @@ void modifyLocksRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
             printf("LOCK!\n");
             debugNode(node, cxtup);
             struct treeNode* currnode = node->children->next->node;
+            debugNode(currnode, cxtup);
+            struct treeNode* locknode = currnode;
             enum CXCursorKind cxck = clang_getCursorKind(currnode->cursor);
             while((cxck != CXCursor_ParenExpr) && (currnode->childCount != 0)) {
                 //debugNode(currnode, cxtup);
@@ -182,38 +184,46 @@ void modifyLocksRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
                 printf("MATCH!\n");
                 CXToken* tokens;
                 unsigned int numTokens;
-                unsigned int numt;
-                CXSourceRange range = clang_getCursorExtent(currnode->cursor);
+                unsigned int numt = 0;
+                CXSourceRange range = clang_getCursorExtent(locknode->cursor);
                 clang_tokenize(cxtup, range, &tokens, &numTokens);
-                if(numTokens % 2 == 0) { // Deduplication bug workaround
-                    numt = numTokens-1;
-                } else {
-                    numt = numTokens;
-                }
                 unsigned long strlength = 0;
-                for(unsigned int i = 0; i < numt; i++) {
+                int numparens = 0; // Duplication bug workaround (extra token will always be the last parenthesis just after the string I am after here, the ")" in "pthread_mutex_init(somelock);" essentially.
+                for(unsigned int i = 0; i < numTokens; i++) {
                     CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
                     char* tstr = clang_getCString(tokenstring);
                     strlength += strlen(tstr);
+                    if(strcmp(tstr, "(") == 0) {
+                        numparens++;
+                        printf("(): %i\n", numparens);
+                    } else if(strcmp(tstr, ")") == 0) {
+                        numparens--;
+                        printf("(): %i\n", numparens);
+                    }
+                    if(numparens >= 0) {
+                        numt++;
+                    }
                     clang_disposeString(tokenstring);
                 }
                 char* lockstring = malloc(strlength+1);
-                printf("strlength: %i, numTokens: %i\n", strlength, numTokens);
+                *lockstring = NULL;
+                printf("strlength: %i, numTokens: %i, lockstring: %lX\n", strlength, numTokens, lockstring);
                 for(unsigned int i = 0; i < numt; i++) {
                     CXString tokenstring = clang_getTokenSpelling(cxtup, tokens[i]);
                     char* tstr = clang_getCString(tokenstring);
                     printf("tstr: %s\n", tstr);
                     strcat(lockstring, tstr);
+                    //printf("lockstring: %s\n", lockstring);
                     clang_disposeString(tokenstring);
                 }
                 printf("lockstring: %s\n", lockstring);
                 char* newstring;
                 if(init == true) {
-                    newstring = malloc(33 + strlength);
-                    sprintf(newstring, "    %s = LL_create(PLAIN_QD_LOCK);", lockstring);
+                    newstring = malloc(21 + strlength);
+                    sprintf(newstring, "    LL_initialize(%s);", lockstring);
                 } else if(destroy == true) {
-                    newstring = malloc(15 + strlength);
-                    sprintf(newstring, "    LL_free(%s);", lockstring);
+                    newstring = malloc(18 + strlength);
+                    sprintf(newstring, "    LL_destroy(%s);", lockstring);
                 } else if(lock == true) {
                     newstring = malloc(15 + strlength);
                     sprintf(newstring, "    LL_lock(%s);", lockstring);
@@ -223,13 +233,13 @@ void modifyLocksRecursive(struct treeNode* node, CXTranslationUnit cxtup) {
                 }
                 addModified(node->parent, node);
                 struct treeNode* currnode2 = node;
+                node->newContent = newstring;
+                node->modified++;
                 while(currnode2->parent != NULL) {
                     addModified(currnode2->parent, node);
                     currnode2->parent->modified++;
                     currnode2 = currnode2->parent;
                 }
-                node->modified++;
-                node->newContent = newstring;
                 free(lockstring);
                 clang_disposeTokens(cxtup, tokens, numTokens);
                 clang_disposeString(cdisplaystring);
@@ -314,7 +324,12 @@ void refactorCrits(struct treeNode* node, CXTranslationUnit cxtup) {
 		//printf("S%i|%s\n", i, nodestrings[i]);
 	        currnode = currnode->next;
 	    }
-	    nodestrings[nodeCount-1] = printNode(currcrit->nodesafter->node, cxtup);
+            if(currcrit->nodesafter->node->modified = 0) {
+                nodestrings[nodeCount-1] = printNode(currcrit->nodesafter->node, cxtup);
+            } else {
+                nodestrings[nodeCount-1] = malloc(strlen(currcrit->nodesafter->node->newContent)*sizeof(char)+1);
+                strcpy(nodestrings[nodeCount-1], currcrit->nodesafter->node->newContent);
+            }
 	    currvar = currcrit->accessedvars;
 	    int size = 3;
 	    while(currvar != NULL) {
@@ -744,7 +759,6 @@ void scanCritRecursive(struct criticalSection* crit, struct treeNode* node, CXTr
                                 tlnode = tlnode->next;
                             }
                             //printf("findNodeAccess = %i\n", at);
-                            printf("needsreturn = %i\n", newvar->needsreturn);
                             if(at == READ) {
                                 printf("READ\n");
                                 newvar->needsreturn = true;

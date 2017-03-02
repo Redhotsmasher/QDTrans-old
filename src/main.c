@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     scanCrits(tree->cxtup);
     modifyLocks(tree->root, tree->cxtup);
     refactorCrits(tree->root, tree->cxtup);
-    debugCrits(crits, tree->cxtup);
+    //debugCrits(crits, tree->cxtup);
     printf("Snopp!\n");
     depth = 0;
     printf("\n\n---\n\n");
